@@ -1390,6 +1390,171 @@ A data engineer has created a Delta table as part of a data pipeline. Downstream
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
+In the context of an Extract, Load, and Transform (ELT) project, a newly formed data engineering team needs the necessary permissions to manage the table named sales. Full privileges grant the team the capability to perform any action required for the project's management. 
+
+Which of the following commands should be executed to grant full permissions on the sales table to the new data engineering team?
+
+*Answer*
+
+### `GRANT ALL PRIVILEGES ON TABLE sales TO team;`
+
+**Explanation:** This command grants all possible permissions (e.g., SELECT, INSERT, UPDATE, DELETE) on the specified table (sales) to the mentioned user or group (team). 
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+In setting up a Delta Live Table (DLT) pipeline for a data engineering task, you have utilized STREAMING LIVE TABLE to define two datasets that will process real-time data streams and LIVE TABLE to define three datasets sourced from Delta Lake tables. The pipeline is configured to execute in Production mode using the **Continuous Pipeline Mode**. 
+
+Given that there is previously unprocessed data available and all table definitions are correct, what would be the expected result upon initiating the pipeline update by clicking Start?
+
+*Answer*
+
+### All datasets will be updated at set intervals until the pipeline is shut down. The compute resources will be deployed for the update and terminated when the pipeline is stopped.
+
+**Explanation:** Continuous Pipeline Mode in Production mode implies that the pipeline continuously processes incoming data updates at set intervals, ensuring the datasets are kept up-to-date as new data arrives. The compute resources are allocated dynamically to process and update the datasets as needed, and they will be terminated when the pipeline is stopped or shut down. This mode allows for real-time or near-real-time updates to the datasets from the streaming/live tables, ensuring that the data remains current and reflects the changes occurring in the data sources
+
+In Continuous Pipeline Mode, the pipeline continuously processes incoming data updates at set intervals in Production mode. This ensures that the datasets are kept up-to-date as new data arrives. The compute resources are allocated dynamically to process and update the datasets as needed and will be terminated when the pipeline is stopped. This mode allows for ongoing updates to the datasets from the STREAMING LIVE TABLE and LIVE TABLE sources, ensuring that the data remains current and reflects the changes from the data sources.
+
+In Delta Live Tables (DLT), when configured to run in Continuous Pipeline Mode, particularly in a production environment, the system is designed to continuously process and update data as it becomes available. This mode keeps the compute resources active to handle ongoing data processing and automatically updates all datasets defined in the pipeline at predefined intervals. Once the pipeline is manually stopped, the compute resources are terminated to conserve resources and reduce costs. This mode is suitable for production environments where datasets need to be kept up-to-date with the latest data.
+
+Reference: [Delta Live Tables Guide](https://www.databricks.com/discover/pages/getting-started-with-delta-live-tables)
+
+Reference: [Configure pipeline settings for Delta Live Tables, Tutorial: Run your first Delta Live Tables pipeline, Building Reliable Data Pipelines Using DataBricks' Delta Live Tables](https://docs.azure.cn/en-us/databricks/delta-live-tables/tutorials)
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+To ensure that Structured Streaming can accurately track the progress of its data processing and manage any potential failures by restarting or reprocessing, which of the following two methods does Spark utilize to log the offset range of the data processed during each trigger?
+
+*Answer*
+
+### Checkpointing and write ahead logs
+
+**Explanation:** In Apache Spark Structured Streaming, fault tolerance and progress tracking are achieved mainly through: 
+- Checkpointing: Saves the progress (offsets, state) of the streaming query to a reliable storage location (e.g., DBFS, S3, HDFS). Allows Spark to restart from the last saved state after a failure.
+- Write-ahead logs (WAL) For some sources (like Kafka), Spark can store the data or metadata before processing, ensuring that it can recover exactly the same data after a failure.
+
+Idempotent sinks are important for avoiding duplicates when reprocessing, but they are not the mechanism for logging the offset range. The offset range logging is handled by checkpointing (and sometimes WAL).
+
+For logging the offset range of the data processed during each trigger, Spark uses: Checkpointing and Write-ahead Logs
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+To better understand the relationship between Gold tables and Silver tables in the context of data processing pipelines, consider the following hierarchical data architecture:
+Raw Data > Bronze Data > Silver Data > Gold Data
+
+Which of the following best describes the relationship between Gold tables and Silver tables?
+
+*Answer*
+
+### Gold tables are more likely to contain aggregations than silver tables
+
+**Explanation:** In the typical 'Bronze-Silver-Gold' data lakehouse architecture, Silver tables are considered a more refined version of the raw or Bronze data, including data cleansing and initial transformations. Gold tables represent a stage where data is further enriched, aggregated, and processed to provide valuable insights for analytical purposes. This involves more aggregations compared to Silver tables.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+In the context of a 'Bronze-Silver-Gold' data lakehouse architecture commonly used in data processing pipelines, which of the following options accurately describes the relationship between Bronze tables and raw data? Note that Bronze tables represent the initial stage where raw data is ingested and transformed into a structured format with a defined schema.
+
+*Answer*
+
+### Bronze tables contain raw data with a schema applied
+
+**Explanation:** Bronze tables are the initial stage in a 'Bronze-Silver-Gold' data lakehouse architecture. They are created from raw data files and contain a schema that describes the data. This schema provides structure and meaning to the raw data, making it more usable and accessible for downstream processing. Therefore, Bronze tables contain the raw data but in a structured and schema-enforced format.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+When dealing with large volumes of data in a modern data engineering environment, one effective method for processing this data incrementally is through the use of specialized tools. With that context in mind, consider the following question: Which tool does Auto Loader utilize to handle and process data in incremental steps?
+
+*Answer*
+
+### Spark structured streaming
+
+**Explanation:** Auto Loader in Databricks uses Spark Structured Streaming to process data incrementally. Spark Structured Streaming is a real-time data processing framework that allows for the incremental processing of data streams as new data arrives. Auto Loader works with Structured Streaming to automatically detect and process new data files added to a specified data source location, ensuring timely and efficient data processing. While checkpointing is a technique used for fault tolerance and exactly-once semantics, it is a part of Structured Streaming, not a tool on its own for processing data incrementally.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+Which tool is used by Auto Loader to process data incrementally?
+
+*Answer*
+
+### Spark Structured Streaming
+
+**Explanation:** Auto Loader in Databricks utilizes Spark Structured Streaming for processing data incrementally. This allows Auto Loader to efficiently ingest streaming or batch data at scale and to recognize new data as it arrives in cloud storage. Spark Structured Streaming provides the underlying engine that supports various incremental data loading capabilities like schema inference and file notification mode, which are crucial for the dynamic nature of data lakes.
+
+Reference: [Microsoft documentation - auto loader](https://learn.microsoft.com/en-us/azure/databricks/ingestion/cloud-object-storage/auto-loader/)
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer is working on a Structured Streaming job within Databricks. The job reads data from an existing table, processes the data, and then writes the output to a new table in a streaming fashion. The data engineer aims to configure the streaming job so that it processes the data in micro-batches with a frequency of every 5 seconds.
+ 
+![trigger](./images/trigger.png)
+
+Given the code block used by the data engineer, which line of code should be used to accomplish this 5-second micro-batch interval requirement?
+
+*Answer*
+
+### `Trigger(processingTime=”5 seconds”)`
+
+**Explanation:** The correct line of code to fill in the blank to execute a micro-batch to process data every 5 seconds is: `trigger(processingTime="5 seconds")`
+- `"trigger('5 seconds')"` would not work because it does not specify that the trigger should be a processing time trigger, which is necessary to trigger a micro-batch processing at regular intervals.
+- `"trigger()"` would not work because it would use the default trigger, which is not a processing time trigger.
+- `"trigger(once='5 seconds')"` would not work because it would only trigger the query once, not at regular intervals.
+- `"trigger(continuous='5 seconds')"`would not work because it would trigger the query to run continuously, without any pauses in between, which is not what the data engineer wants.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+
+*Answer*
+
+### 
+
+**Explanation:** 
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+
+*Answer*
+
+### 
+
+**Explanation:** 
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+
+*Answer*
+
+### 
+
+**Explanation:** 
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+
+*Answer*
+
+### 
+
+**Explanation:** 
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+
+*Answer*
+
+### 
+
+**Explanation:** 
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+
+*Answer*
+
+### 
+
+**Explanation:** 
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
 
 *Answer*
 
