@@ -1501,12 +1501,350 @@ Given the code block used by the data engineer, which line of code should be use
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
+A data engineer has configured a Structured Streaming job to read from a table, manipulate the data, and then perform a streaming write into a new table.
+The code block used by the data engineer is below:
+
+![stream batch](./images/stream_batch.png)
+  
+If the data engineer only wants the query to process all of the available data in as many batches as required, which of the following lines of code should the data engineer use to fill in the blank?
 
 *Answer*
 
-### 
+### `trigger(availableNow=True)`
 
 **Explanation:** 
+```
+DataStreamWriter.trigger(*, 
+    processingTime: Optional[str] = None, 
+    once: Optional[bool] = None, 
+    continuous: Optional[str] = None, 
+    availableNow: Optional[bool] = None) -> pyspark.sql.streaming.DataStreamWriter
+```
+Reference: https://spark.apache.org/docs/latest/api/python/reference/pyspark.ss/api/pyspark.sql.streaming.DataStreamWriter.trigger.html
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer has configured a Structured Streaming job to read from a table, manipulate the data, and then perform a streaming write into a new table.
+The cade block used by the data engineer is below:
+ 
+ ![stream mini batch](./images/stream_5sec.png)
+
+If the data engineer only wants the query to execute a micro-batch to process data every 5 seconds, which of the following lines of code should the data engineer use to fill in the blank?
+
+*Answer*
+
+### `trigger(processingTime="5 seconds")`
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A dataset, constructed using Delta Live Tables, incorporates an expectations clause: 
+
+`CONSTRAINT valid_timestamp EXPECT (timestamp > '2020-01-01') ON VIOLATION DROP ROW;`
+
+What is the anticipated outcome when processing a batch of data that includes records which do not meet these constraints?
+
+*Answer*
+
+### Records that violate the expectation are dropped from the target dataset and recorded as invalid in the event log.
+
+**Explanation:** The expectation clause specifies that if the timestamp is not greater than '2020-01-01', the row will be considered in violation of the constraint. The ON VIOLATION DROP ROW clause means that rows violating the constraint will be dropped from the target dataset. Additionally, these violated records are recorded as invalid in the event log, ensuring that the rows failing the defined constraint are logged for auditing or further investigation. This behavior maintains data integrity within the dataset based on the specified constraints.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer has realized that they made a mistake when making a daily update to a table. They need to use Delta time travel to restore the table to a version that is 3 days old. However, when the data engineer attempts to time travel to the older version, they are unable to restore the data because the data files have been deleted.
+
+Which of the following explains why the data files are no longer present?
+
+*Answer*
+
+### The VACUUM command was run on the table
+
+**Explanation:** Delta Lake time travel relies on retaining old data files and metadata. The VACUUM command permanently deletes files that are no longer referenced by the Delta transaction log and are older than the retention threshold (default is 7 days, but it can be manually overridden).
+
+If VACUUM was run with a retention period less than 3 days, then the files needed for time travel to that version would be deleted, making restoration impossible.
+
+Why the other options are incorrect:
+- DELETE HISTORY → Not a valid Delta Lake command. You can view history with DESCRIBE HISTORY, but there's no command to delete it directly.
+- TIME TRAVEL → Time travel is a read-only operation; it doesn’t delete files.
+- HISTORY → Just shows the table’s transaction history; it doesn’t affect data retention.
+- OPTIMIZE → Improves performance by compacting files, but does not delete old data files.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+In the context of creating Delta Live Tables (DLT) using SQL within Databricks, which of the following scenarios is most appropriate for employing the CREATE STREAMING LIVE TABLE (formerly known as CREATE INCREMENTAL LIVE TABLE) syntax instead of the CREATE LIVE TABLE syntax?
+
+*Answer*
+
+### CREATE STREAMING LIVE TABLE should be used when data needs to be processed incrementally
+
+**Explanation:** The CREATE STREAMING LIVE TABLE syntax is used to create tables that read data incrementally, while the CREATE LIVE TABLE syntax is used to create tables that read data in batch mode. Delta Live Tables (DLT) support both streaming and batch modes of processing data. When the data is streamed and needs to be processed incrementally, CREATE STREAMING LIVE TABLE should be used.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer is tasked with creating an efficient data pipeline. The source system continuously generates files in a shared directory that is utilized by multiple processes. Consequently, the files should remain unchanged and will accumulate in this directory over time. The data engineer must determine which files have been newly added since the last pipeline run and configure the pipeline to exclusively ingest these new files in every subsequent run. Which of the following tools can the data engineer use to address this requirement?
+
+*Answer*
+
+### Auto Loader
+
+**Explanation:** Auto Loader is designed to incrementally and efficiently process new data files as they arrive in cloud storage. It can detect new files since the previous run and ingest only those files, making it suitable for this scenario where files accumulate in a shared directory and only new files need to be ingested with each run.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer is designing a data pipeline. The source system generates files in a shared directory that is also used by other processes. As a result, the files should be kept as is and will accumulate in the directory. The data engineer needs to identify which files are new since the previous run in the pipeline, and set up the pipeline to only ingest those new files with each run.
+
+Which of the following tools can the data engineer use to solve this problem?
+
+*Answer*
+
+### Auto Loader
+
+**Explanation:** Auto Loader incrementally and efficiently processes new data files as they arrive in cloud storage without any additional setup.
+
+Reference: https://docs.databricks.com/en/ingestion/auto-loader/index.html
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer is working with a Delta Live Tables (DLT) pipeline that comprises three tables. The pipeline is configured to drop invalid records at each stage to maintain data quality. However, the engineer has observed that certain data records are being dropped at some point in the DLT pipeline due to quality issues. 
+
+To locate the specific table where the data is being dropped, which of the following strategies can the data engineer employ to diagnose and identify the table responsible for dropping the records?
+
+*Answer*
+
+### They can navigate to the DLT pipeline page, click on each table, and views the data quality statistics.
+
+**Explanation:** To identify the table in a Delta Live Tables (DLT) pipeline where data is being dropped due to quality concerns, the data engineer can navigate to the DLT pipeline page, click on each table in the pipeline, and view the data quality statistics. These statistics often include information about records dropped, violations of expectations, and other data quality metrics. By examining the data quality statistics for each table in the pipeline, the data engineer can determine at which table the data is being dropped.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+As a data engineer, you have a job that runs a single task every morning before your workday starts. Recently, you discovered an issue with the upstream data that needs to be addressed. To resolve this, you plan to schedule an additional task that will execute a new notebook before the existing task. Which method can you utilize to configure this new task?
+
+*Answer*
+
+### They can create a new task in the existing job and then add it as a dependency of the original task.
+
+**Explanation:** Adding the new task as a dependency of the original task means that the new task will run before the original task. This ensures that the original task will only run after the new task has completed, addressing the requirement of running the new notebook prior to the original task.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+An engineering manager is overseeing the performance of a newly released project and is interested in monitoring it using a Databricks SQL query. The manager requests that for the first week post-release, the query results should be refreshed every minute. Nevertheless, there is a concern that continuous compute resource usage beyond the initial one-week period could incur significant costs to the organization. Which of the following strategies can the engineering team implement to ensure that the query only runs and incurs costs for the first week following the release, thereby preventing unnecessary expenses thereafter?
+
+(Other version: An engineering manager wants to monitor the performance of a recent project using a Databricks SQL query. For the first week following the project’s release, the manager wants the query results to be updated every minute. However, the manager is concerned that the compute resources used for the query will be left running and cost the organization a lot of money beyond the first week of the project’s release. Which of the following approaches can the engineering team use to ensure the query does not cost the organization any money beyond the first week of the project’s release?)
+
+*Answer*
+
+### They can set the query’s refresh schedule to end on a certain date in the query scheduler.
+
+**Explanation:** Databricks offers a Query Scheduler that allows users to schedule the execution of SQL queries at specific intervals or for specific durations. By configuring the query's refresh schedule to conclude or end on a certain date within the first week of the project's release, the query will automatically stop refreshing after that date. This action ensures that compute resources aren't continuously utilized beyond the specified timeframe, preventing unnecessary costs.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A newly formed data engineering team has been tasked with working on a specific project that requires interaction with an existing database named "customers". The team needs to be able to view and interact with all tables within this database to effectively carry out their project tasks. The team belongs to a specific user group within the organization. Which of the following SQL commands can be used to grant the required permissions on the entire "customers" database to this new user group?
+
+(Other version: A new data engineering team has been assigned to work on a project. The team will need access to database customers in order to see what tables already exist. The team has its own group team. Which of the following commands can be used to grant the necessary permission on the entire database to the new team?)
+
+*Answer*
+
+### `GRANT USAGE ON DATABASE customers TO team;`
+
+**Explanation:** The USAGE privilege allows the team to see the tables that exist in the database.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer is currently working in a Databricks Repo, which has been cloned from a central Git repository to facilitate version control and collaboration. During the development process, the data engineer is notified by a colleague that updates have been committed and pushed to the central Git repository. To incorporate these updates into their working Databricks Repo, which is vital for maintaining the latest version of the codebase and avoiding conflicts, the data engineer must synchronize their local environment with the central repository. 
+
+Which of the following Git operations should the data engineer execute to achieve this synchronization?
+
+*Answer*
+
+### Pull
+
+**Explanation:** The data engineer needs to sync their local Databricks Repo with the changes made in the central Git repository. The correct Git operation to achieve this is 'Pull', as it fetches and integrates the changes from the remote repository to the local repository.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+The Databricks Lakehouse Platform integrates both data lakes and data warehouses, providing a unified solution for data management and analytics. Emphasizing open-source technologies is a strategic component of this platform. What is a key advantage of the Databricks Lakehouse Platform's adoption of open-source technologies?
+
+*Answer*
+
+### Avoiding vendor lock-in
+
+**Explanation:** The benefit of the Databricks Lakehouse Platform embracing open source technologies is avoiding vendor lock-in. Open source technologies are not tied to a specific vendor, which means organizations can freely choose and switch between different vendors without being locked into a single provider's ecosystem.
+
+One of the benefits of the Databricks Lakehouse Platform embracing open source technologies is that it avoids vendor lock-in. This means that customers can use the same open source tools and frameworks across different cloud providers, and migrate their data and workloads without being tied to a specific vendor. 
+
+The Databricks Lakehouse Platform is built on open source projects such as Apache Spark™, Delta Lake, MLflow, and Redash, which are widely used and trusted by millions of developers. By supporting these open source technologies, the DatabricksLakehouse Platform enables customers to leverage the innovation and community of the open source ecosystem, and avoid the risk of being locked into proprietary or closed solutions. The other options are either not related to open source technologies, or not benefits of the Databricks Lakehouse Platform. 
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer is in the process of designing a data pipeline that incorporates a Delta table. However, they are uncertain whether they possess the necessary permissions to access and manipulate this table. Where can the data engineer check to verify their permissions on the Delta table?
+
+*Answer*
+
+### Data Explorer
+
+**Explanation:** Data Explorer in Databricks is the tool designed for users to explore and manage their data assets, including viewing permissions for tables. It allows data engineers to review and manage table properties, schemas, and access permissions, making it the correct choice for checking permissions on a Delta table.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+In what type of scenario would a data engineer find it most beneficial to employ a single-node cluster?
+
+*Answer*
+
+### When they are working interactively with a small amount of data
+
+**Explanation:** A single-node cluster is ideal for scenarios where a data engineer is working interactively with a small amount of data. Single-node clusters consist of an Apache Spark driver without Spark workers, making them suitable for interactive queries and small datasets. This setup does not scale well, so it's not appropriate for large data or automated reports that need refreshing quickly.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+As a data engineer, you are tasked with adding a new record to an existing Delta table named my_table. The new record contains the following data: id (data type STRING) with a value of 'a1', rank (data type INTEGER) with a value of 6, and rating (data type FLOAT) with a value of 9.4. Which of the following SQL commands can be used to append this new record to the existing Delta table my_table?
+
+*Answer*
+
+### `INSERT INTO my_table VALUES (‘a1’, 6, 9.4)`
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer working with a Delta table has observed that the associated data files are extremely small, leading to potential performance issues. To enhance performance by compacting these small files into larger ones, which of the following keywords should the data engineer use?
+
+(Other version: Which of the following commands can a data engineer use to compact small data files of a Delta table into larger ones?)
+
+*Answer*
+
+### Optimize
+
+**Explanation:** The OPTIMIZE command in Databricks Delta Lake is used to compact small files into larger ones, thus improving performance. This process is known as file compaction and helps to enhance query performance by reducing the number of files that the engine needs to scan.
+
+-------------------------------------------------------------------------------------------------------------------------
+
+## **Question**
+Delta Lake, which is an open-source storage layer that brings reliability to data lakes, primarily stores data in a specific file format. Considering the different file formats available for data storage, indicate the file format in which data from Delta Lake tables is primarily stored.
+
+*Answer*
+
+### Parquet
+
+**Explanation:** Delta Lake tables primarily store data in the Parquet file format. Delta Lake adds a transactional layer on top of the Parquet files to support ACID transactions and additional features like versioning and time travel.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+When using Databricks within your organization's cloud infrastructure, which of the following assets are stored directly within the cloud account managed by your organization?
+
+*Answer*
+
+### Data
+
+**Explanation:** In Databricks, data is stored in the customer's cloud account in the data plane. The data plane is where customer data resides and is processed, whereas other components like the Databricks web application, cluster management metadata, repos, and notebooks are managed by Databricks and do not necessarily reside in the customer's cloud account.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+According to the Databricks Lakehouse architecture, which of the following is located in the customer's cloud account?
+
+*Answer*
+
+### Cluster virtual machines
+
+**Explanation:** According to the Databricks Lakehouse architecture, the platform is designed with a shared responsibility model between Databricks-managed infrastructure and the customer's cloud account.
+
+Cluster virtual machines (VMs) are the compute resources used to run notebooks, jobs, and queries. In the customer-managed cloud model, these VMs are provisioned in the customer's cloud account (e.g., AWS, Azure, GCP). This allows customers to maintain control over networking, security, and cost management.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+In modern data engineering, companies often face challenges with data that is siloed in specialized architectures tailored for specific use cases. To address this fragmentation and enhance data integration, which of the following technologies or approaches can be utilized to simplify and unify these siloed data architectures?
+
+*Answer*
+
+### Data lakehouse
+
+**Explanation:** A Data Lakehouse combines elements of data lakes and data warehouses to unify disparate data architectures, making it versatile for multiple specific use cases and simplifying data management
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+Which of the following commands will return the number of null values in the member_id column?
+
+*Answer*
+
+### `SELECT count_if(member_id IS NULL) FROM my_table;`
+
+**Explanation:** count_if(condition) is a Databricks SQL function that counts the number of rows where the condition is true.
+So count_if(member_id IS NULL) will count all rows where member_id is NULL.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer needs to apply custom logic to identify employees with more than 5 years of experience in array column employees in table stores. The custom logic should create a new column exp_employees that is an array of all of the employees with more than 5 years of experience for each row. In order to apply this custom logic at scale, the data engineer wants to use the FILTER higher-order function. Which of the following code blocks successfully completes this task?
+
+*Answer*
+
+### `SELECT store_id, employees, FILTER (employees, i -> i.years_exp > 5) AS exp_employees FROM stores;`
+
+**Explanation:** To solve this use case, the goal is to use the FILTER higher-order function in Databricks SQL to:
+- Apply custom logic to an array column (employees), 
+- Extract only employees with more than 5 years of experience, 
+- Create a new array column called exp_employees
+
+FILTER(array, lambda_expression) is a higher-order function that returns a subset of the array based on the condition.
+i -> i.years_exp > 5 is a lambda function that checks each employee's years_exp.
+This syntax is valid in Databricks SQL and Spark SQL when working with arrays of structs
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer is tasked with ensuring the quality of data inputs to an Extract, Load, Transform (ELT) job by leveraging a Databricks SQL dashboard to monitor for cleanliness. Specifically, there is a dedicated Databricks SQL query in place that identifies the count of input records with unexpected NULL values. The engineer aims for an automated system to notify their entire team via a messaging webhook if the count of these NULL value-containing records reaches a threshold of 100. Which of the following strategies can the data engineer employ to trigger a messaging webhook notification to their entire team when the count of NULL values hits 100?
+
+*Answer*
+
+### They can set up an Alert with a new webhook alert destination
+
+**Explanation:** To notify the entire team via a messaging webhook whenever the number of NULL values reaches 100, the data engineer can set up an Alert in Databricks with a new webhook alert destination. This allows them to configure the alert to trigger when the specified condition (reaching 100 NULL values) is met, and the notification can be sent to the team's messaging webhook. The answer provides the specific approach to achieve the desired outcome of notifying the team via a messaging webhook when the condition is met.
+
+A webhook alert destination is a notification destination that allows Databricks to send HTTP POST requests to a third-party endpoint when an alert is triggered. This enables the data engineer to integrate Databricks alerts with their preferred messaging or collaboration platform, such as Slack, Microsoft Teams, or PagerDuty. 
+
+To set up a webhook alert destination, the data engineer needs to create and configure a webhook connector in their messaging platform, and then add the webhook URL to the Databricks notification destination. After that, the data engineer can create an alert for their Databricks SQL query, and select the webhook alert destination as the notification destination. The alert can be configured with a custom condition, such as when the number of stores with $0 in sales is greater than zero, and a custom message template, such as "Alert: {number_of_stores} stores have $0 in sales". The alert can also be configured with a recurrence interval, such as every hour, to check the query result periodically. When the alert condition is met, the data engineer and their team will receive a notification via the messaging webhook, with the custom message and a link to the Databricks SQL query. 
+
+The other options are either not suitable for sending notifications via a messaging webhook, or not suitable for sending recurring notifications. 
+
+Reference: Databricks Documentation - Manage notification destinations, Databricks Documentation - Create alerts for Databricks SQL queries, Databricks Documentation - Configure alert conditions and messages.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A single Job in Databricks is designed to run two separate tasks, each represented by an individual notebook. A data engineer has observed that one of these notebooks is executing more slowly than expected during the Job’s current operation. Seeking assistance, the data engineer reaches out to a technical lead to diagnose the reason for this reduced performance. 
+
+Which of the following methods can the technical lead employ to determine the cause of the notebook's slow execution within the Job context?
+
+*Answer*
+
+### They can navigate to the Runs tab in the jobs UI and click on the active run to review the processing notebook
+
+**Explanation:** The tech lead can navigate to the Runs tab in the Jobs UI and click on the active run to review the processing notebook. This provides detailed information about the execution of each run in a Job, including execution logs, duration, resource utilization, and any error messages or warnings, which can help identify potential performance issues.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+You have written a notebook to generate a summary data set for reporting, Notebook was scheduled using the job cluster, but you realized it takes 8 minutes to start the cluster, what feature can be used to start the cluster in a timely fashion so your job can run immediately?
+
+*Answer*
+
+### Use the Databricks cluster pool feature to reduce the startup time
+
+**Explanation:** Cluster pools in Databricks allow you to **pre-warm virtual machines (VMs)** so that when a job starts, it can **quickly attach to an already-prepared VM**, significantly reducing cluster startup time—often from several minutes to under a minute.
+
+This is ideal for scheduled jobs where latency matters, such as generating reports or running time-sensitive ETL tasks.
+
+Cluster Pools: Reduced startup time for general-purpose clusters (used in notebooks, Python jobs, etc.). Best for: Scheduled jobs, ETL pipelines, and notebooks that use Spark.
+
+If your reporting job is written in SQL and scheduled via a SQL endpoint, **Serverless SQL Warehouse** is the ideal solution. If it's a notebook using Python or Spark, then **Cluster Pools** are the way to go.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+Data engineering team has provided 10 queries and asked Data Analyst team to build a dashboard and refresh the data every day at 8 AM, identify the best approach to set up data refresh for this dashboard? 
+
+Which of the following approaches can the manager use to ensure the results of the query are updated each day?
+
+*Answer*
+
+### The entire dashboard with 10 queries can be refreshed at once, single schedule needs to be setup to refresh at 8 AM.
+
+**Explanation:** In Databricks SQL (or similar BI tools connected to Databricks), dashboards are typically composed of multiple queries. These dashboards can be scheduled to refresh as a whole, meaning all queries are re-executed together at the scheduled time. 
+
+So, if the data engineering team has provided 10 queries and the dashboard is built using those, you can: Set a single refresh schedule for the dashboard (e.g., daily at 8 AM). All queries will run and update the visualizations accordingly.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
@@ -1563,3 +1901,14 @@ Given the code block used by the data engineer, which line of code should be use
 **Explanation:** 
 
 -------------------------------------------------------------------------------------------------------------------------
+## **Question**
+
+*Answer*
+
+### 
+
+**Explanation:** 
+
+-------------------------------------------------------------------------------------------------------------------------
+
+
