@@ -1,3 +1,23 @@
+## From June 2025, Databricks introduced new naming for both DLT and Jobs/Workflows.
+
+Databricks Jobs (i.e. Workflows) is now called Lakeflow Jobs
+- June 11, 2025
+- The product known as Databricks Jobs is now Lakeflow Jobs. No migration is required to use Lakeflow Jobs.
+
+DLT (Delta Live Tables) is now called Lakeflow Declarative Pipelines
+- June 11, 2025
+- The product known as DLT is now Lakeflow Declarative Pipelines. No migration is required to use Lakeflow Declarative Pipelines.
+
+Reference: https://docs.databricks.com/gcp/en/release-notes/product/2025/june
+
+
+Implications
+
+- The functionality of DLT / Jobs is preserved; this is more of a branding & naming change, though some new features accompany it. 
+- “No migration required” language is used: you don’t need to manually remap everything; it’s mostly a rename under the hood. 
+- Some API changes (e.g. AUTO CDC replacing APPLY CHANGES) are being encouraged in Lakeflow Declarative Pipelines. 
+
+
 ## Difference between Databricks DLT (Delta Live Tables) and Workflows.
 
 They’re both orchestration/automation tools in Databricks, but they serve different purposes:
@@ -156,3 +176,20 @@ Both options bring you to the same DLT creation flow — the only difference is 
 If you click Job, you’re creating a Databricks Workflow job.
 This is for orchestrating notebooks, JARs, SQL tasks, Python scripts, etc.
 Not a DLT pipeline (though you can call a DLT pipeline as a task inside a Workflow).
+
+
+## Jobs vs Pipelines
+
+In Databricks certification context:
+
+Jobs = Workflows
+- A Job in the UI = a Databricks Workflow.
+- It’s the general-purpose orchestration engine.
+- Can run notebooks, Python scripts, SQL, JARs, dbt, shell commands, or even DLT pipelines as tasks.
+
+
+Pipelines = Delta Live Tables (DLT)
+- A Pipeline in the UI = a DLT pipeline.
+- Specialized for data ingestion and ETL (Bronze → Silver → Gold).
+- Written only in SQL or Python (PySpark).
+- Brings built-in lineage, expectations, auto-scaling, and reliability.

@@ -6,6 +6,7 @@ Copilot has been used to explain the answers of some questions, but stil I canno
 
 Websites: 
 - [github canaytore](https://github.com/canaytore/spark-learnings/blob/main/Databricks_Certified_Associate_Developer_for_Apache_Spark_Practice_Exam.md)
+- https://certificationpractice.com/practice-exams/databricks-certified-data-engineer-associate
 
 
 Other documentation:

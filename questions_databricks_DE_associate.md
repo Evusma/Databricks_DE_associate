@@ -1848,67 +1848,300 @@ So, if the data engineering team has provided 10 queries and the dashboard is bu
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
+As a data engineer, you have a Job scheduled to run nightly, comprising multiple tasks. However, each task experiences slow execution times due to the lengthy start-up duration of the clusters. 
+
+Which of the following actions can you take to expedite the start-up times for the clusters used in the Job?
 
 *Answer*
 
-### 
+### Use clusters that are from a cluster pool
+
+**Explanation:** Using clusters from a cluster pool can significantly reduce the start-up time for clusters used in the Job. Cluster pools contain pre-configured and pre-started clusters that are ready for use, eliminating the need to start new clusters from scratch each time a Job runs.
+
+The best action that the data engineer can perform to improve the start up time for the clusters used for the Job is to use clusters that are from a cluster pool. A cluster pool is a set of idle clusters that can be used by jobs or interactive sessions. By using a cluster pool, the data engineer can avoid the cluster creation time and reduce the latency of the tasks. Cluster pools also offer cost savings and resource efficiency, as they can be shared by multiple users and jobs.
+
+Incorrect options:
+- Endpoints available in Databricks SQL are used for creating and managing SQL analytics workloads, not for improving cluster start up time.
+- Jobs clusters and all-purpose clusters have similar start up times. Jobs clusters are clusters that are dedicated to run a single job and are terminated when the job is completed. - All-purpose clusters are clusters that can be used for multiple purposes, such as interactive sessions, notebooks, or multiple jobs. Both types of clusters can benefit from using a cluster pool.
+- Configuring the clusters to be single-node will reduce the parallelism and performance of the tasks. Single-node clusters are clusters that have only one worker node and are typically used for testing or development purposes. They are not suitable for running production jobs that require high scalability and fault tolerance.
+- configuring the clusters to autoscale for larger data sizes will not affect the start up time of the clusters. Autoscaling is a feature that allows clusters to dynamically adjust the number of worker nodes based on the workload. It can help optimize the resource utilization and cost efficiency of the clusters, but it does not speed up the cluster creation process.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+Which of the following describes a scenario in which a data team will want to utilize cluster pools?
+
+*Answer*
+
+### An automated report needs to be refreshed as quickly as possible.
+
+**Explanation:** Databricks cluster pools are a set of idle, ready-to-use instances that can reduce cluster start and auto-scaling times. This is useful for scenarios where a data team needs to run an automated report as quickly as possible, without waiting for the cluster to launch or scale up. 
+
+Cluster pools can also help save costs by reusing idle instances across different clusters and avoiding DBU charges for idle instances in the pool. 
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+Which of the following describes a scenario in which a data engineer will want to use a Job cluster instead of an all-purpose cluster?
+
+*Answer*
+
+### An automated workflow needs to be run every 30 minutes.
+
+**Explanation:** A Job cluster is a temporary cluster created specifically for running a scheduled or automated job. It starts when the job begins and terminates when the job ends, helping to optimize cost and resource usage. This makes it ideal for automated workflows, like one that runs every 30 minutes.
+
+Other scenarios:
+- Ad-hoc analytics report → Better suited for an all-purpose cluster, which supports interactive development.
+- Team collaboration on ML model → Requires shared, persistent resources, best handled by an all-purpose cluster.
+- Scheduled Databricks SQL query → Typically uses SQL endpoints, not job clusters.
+- Manual investigation of a production error → This is an interactive task, better suited for an all-purpose cluster.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer has a Job with multiple tasks that runs nightly. Each of the tasks runs slowly because the clusters take a long time to start.
+
+Which of the following actions can the data engineer perform to improve the start up time for the clusters used for the Job?
+
+*Answer*
+
+### They can use clusters that are from a cluster pool
+
+**Explanation:** The best action that the data engineer can perform to improve the start up time for the clusters used for the Job is to use clusters that are from a cluster pool. 
+
+A cluster pool is a set of idle clusters that can be used by jobs or interactive sessions. By using a cluster pool, the data engineer can avoid the cluster creation time and reduce the latency of the tasks. Cluster pools also offer cost savings and resource efficiency, as they can be shared by multiple users and jobs.
+
+Other scenarios:
+- endpoints available in Databricks SQL are used for creating and managing SQL analytics workloads, not for improving cluster start up time.
+- jobs clusters and all-purpose clusters have similar start up times. Jobs clusters are clusters that are dedicated to run a single job and are terminated when the job is completed. All-purpose clusters are clusters that can be used for multiple purposes, such as interactive sessions, notebooks, or multiple jobs. Both types of clusters can benefit from using a cluster pool.
+- configuring the clusters to be single-node will reduce the parallelism and performance of the tasks. Single-node clusters are clusters that have only one worker node and are typically used for testing or development purposes. They are not suitable for running production jobs that require high scalability and fault tolerance.
+- configuring the clusters to autoscale for larger data sizes will not affect the start up time of the clusters. Autoscaling is a feature that allows clusters to dynamically adjust the number of worker nodes based on the workload. It can help optimize the resource utilization and cost efficiency of the clusters, but it does not speed up the cluster creation process.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+As part of an ELT (Extract, Load, Transform) project implementation, a new data engineering team has been brought on board. To enable this team to effectively manage and execute the project, they will need full access rights to the customers database. Which of the following SQL commands can be used to grant comprehensive permissions on the database to the new data engineering team?
+
+*Answer*
+
+### `GRANT ALL PRIVILEGES ON DATABASE customers TO team;`
+
+**Explanation:** The correct command to grant full permissions on the database to the new data engineering team is 'GRANT ALL PRIVILEGES ON DATABASE customers TO team;'. This command provides the team with all possible privileges on the specified database, allowing them to fully manage it.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A newly formed data engineering team has been tasked with working on a specific project that requires interaction with an existing database named "customers". The team needs to be able to view and interact with all tables within this database to effectively carry out their project tasks. The team belongs to a specific user group within the organization. Which of the following SQL commands can be used to grant the required permissions on the entire "customers" database to this new user group?
+
+*Answer*
+
+### `GRANT USAGE ON DATABASE customers TO team;`
+
+**Explanation:** The correct command is 'GRANT USAGE ON DATABASE customers TO team;'. The USAGE privilege allows the team to see the tables that exist in the database.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data analyst has noticed that their Databricks SQL queries are running too slowly. They claim that this issue is affecting all of their sequentially run queries. They ask the data engineering team for help. The data engineering team notices that each of the queries uses the same SQL endpoint, but the SQL endpoint is not used by any other user. 
+
+Which of the following approaches can the data engineering team use to improve the latency of the data analyst’s queries?
+
+*Answer*
+
+### They can increase the cluster size of the SQL endpoint.
+
+**Explanation:** At here we have two things to decide which is the right choice: 
+- There has got no other user sharing the same cluster, 
+- The queries are sequentially running. 
+
+Their queries are sequentially running so they need more powerful cluster to run and the cluster is not share for many users.
+
+If all the queries were submitted at the same time, then more autoscaling would help.
+
+I think the key is the word sequential. If the queries are sequential, they won't trigger autoscaling. For sequential, you'd want a larger VM. Autoscaling will be triggered by lots of cluster use/many queries.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+Which of the following describes when to use the CREATE STREAMING LIVE TABLE (formerly CREATE INCREMENTAL LIVE TABLE) syntax over the CREATE LIVE TABLE syntax when creating Delta Live Tables (DLT) tables using SQL?
+
+*Answer*
+
+### CREATE STREAMING LIVE TABLE should be used when data needs to be processed incrementally.
+
+**Explanation:** A streaming live table or view processes data that has been added only since the last pipeline update. 
+
+Streaming tables and views are stateful; if the defining query changes, new data will be processed based on the new query and existing data is not recomputed. This is useful when data needs to be processed incrementally, such as when ingesting streaming data sources or performing incremental loads from batch data sources. 
+
+A live table or view, on the other hand, may be entirely computed when possible to optimize computation resources and time. This is suitable when data needs to be processed in full, such as when performing complex transformations or aggregations that require scanning all the data.
+
+Reference:Difference between LIVE TABLE and STREAMING LIVE TABLE,CREATE STREAMING TABLE,Load data using streaming tables in Databricks SQL.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer needs to use a Delta table as part of a data pipeline, but they do not know if they have the appropriate permissions.
+
+In which location can the data engineer review their permissions on the table?
+
+*Answer*
+
+### Catalog Explorer
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+(identify a scenario to use an external table)
+
+A Data Engineer needs to create a parquet bronze table and wants to ensure that it gets stored in a specific path in an external location.
+Which table can be created in this scenario?
+
+*Answer*
+
+### An external table where the location is pointing to specific path in external location.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data analysis team has noticed that their Databricks SQL queries are running too slowly when connected to their always-on SQL endpoint. They claim that this issue is present when many members of the team are running small queries simultaneously. They ask the data engineering team for help. The data engineering team notices that each of the team’s queries uses the same SQL endpoint.
+
+Which of the following approaches can the data engineering team use to improve the latency of the team’s queries?
+
+*Answer*
+
+### They can increase the maximum bound of the SQL endpoint’s scaling range.
+
+**Explanation:** SQL endpoints in Databricks can autoscale between a minimum and maximum number of clusters. If many users are running queries at the same time, the endpoint may not scale up fast enough or may be limited by its maximum bound. Increasing the maximum bound allows the endpoint to scale out and handle more concurrent queries, improving latency.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer wants to schedule their Databricks SQL dashboard to refresh once per day, but they only want the associated SQL endpoint to be running when it is necessary.
+Which of the following approaches can the data engineer use to minimize the total running time of the SQL endpoint used in the refresh schedule of their dashboard?
+
+*Answer*
+
+### They can turn on the Auto Stop feature for the SQL endpoint.
+
+**Explanation:** Auto Stop automatically shuts down the SQL endpoint after a period of inactivity. (This is for reducing idle time and cost, not performance during active use.)
+This ensures the endpoint only runs when needed (e.g., during the scheduled dashboard refresh), and stops shortly after, reducing cost and resource usage.
+
+Perfect for use cases with infrequent scheduled queries, like a daily dashboard refresh.
+
+The other options are less suitable:
+- Serverless SQL endpoint → This is also a good option to reduce cold start latency and simplify resource management, but Auto Stop directly addresses minimizing runtime.
+- Reduce cluster size → Reduces cost while running, but doesn’t help with minimizing total running time.
+- Ensure dashboard's SQL endpoint matches each query's endpoint → This is about consistency, not runtime optimization.
+- Ensure dashboard's SQL endpoint is not one of the included query's endpoint → This could lead to inefficiencies or errors; not a recommended practice.
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+Which of the following Structured Streaming queries is performing a hop from a Silver table to a Gold table?
+
+*Answer*
+
+### ![from silver](./images/from_silver.png)
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer is using the following code block as part of a batch ingestion pipeline to read from a composable table:
+
+![batch ingestion](./images/batch_ingestion.png)
+
+Which of the following changes needs to be made so this code block will work when the transactions table is a stream source?
+
+*Answer*
+
+### Replace spark.read with spark.readStream
+
+**Explanation:** To read from a stream source, the data engineer needs to use the spark.readStream method instead of the spark.read method. 
+
+The spark.readStream method returns a DataStreamReader object that can be used to specify the details of the input source, such as the format, the schema, the path, and the options. 
+
+The spark.read method is only suitable for batch processing, not streaming processing. The other changes are not necessary or correct for reading from a stream source. References: Structured Streaming Programming Guide, Read a stream, Databricks Data Sources
+
+-------------------------------------------------------------------------------------------------------------------------
+## **Question**
+A data engineer is working with two tables. Each of these tables is displayed below in its entirety.
+
+![tables](./images/tables.png)
+
+The data engineer runs the following query to join these tables together:
+
+![join](./images/query_join.png)
+
+Which of the following will be returned by the above query?
+
+*Answer*
+
+### ![returned](./images/returned.png)
 
 **Explanation:** 
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
+If the default notebook language is SQL, which of the following options can a data engineer use to run a Python code in this SQL Notebook?
 
 *Answer*
 
-### 
-
-**Explanation:** 
+### They can add %python at the start of a cell
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
+A data engineer has a Python notebook in Databricks, but they need to use SQL to accomplish a specific task within a cell. They still want all of the other cells to use Python without making any changes to those cells.
+
+Which of the following describes how the data engineer can use SQL within a cell of their Python notebook?
 
 *Answer*
 
-### 
+### They can add %sql to the first line of the cell
 
-**Explanation:** 
+**Explanation:** In Databricks, you can use different languages within the same notebook by using magic commands. Magic commands are special commands that start with a percentage sign (%) and allow you to change the behavior of the cell. 
+
+To use SQL within a cell of a Python notebook, you can add %sql to the first line of the cell. This will tell Databricks to interpret the rest of the cell as SQL code and execute it against the default database. You can also specify a different database by using the USE statement. The result of the SQL query will be displayed as a table or a chart, depending on the output mode. 
+
+You can also assign the result to a Python variable by using the -o option. For example, %sql -o df SELECT * FROM my_table will run the SQL query and store the result as a pandas DataFrame in the Python variable df. 
+
+Other options:
+- it is possible to use SQL in a Python notebook using magic commands.
+- attaching the cell to a SQL endpoint is not necessary and will not change the language of the cell. 
+- simply writing SQL syntax in the cell will result in a syntax error, as the cell will still be interpreted as Python code. 
+- changing the default language of the notebook to SQL will affect all the cells, not just one. 
+
+References: Use SQL in Notebooks - Knowledge Base - Noteable, [SQL magic commands - Databricks], [Databricks SQL Guide - Databricks]
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
+A data engineer that is new to using Python needs to create a Python function to add two integers together and return the sum
+
+Which of the following code blocks can the data engineer use to complete this task?
 
 *Answer*
 
-### 
-
-**Explanation:** 
+### ![python function](./images/python_func.png)
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
+A data engineer is attempting to drop a Spark SQL table my_table. The data engineer wants to delete all table metadata and data. They run the following command: `DROP TABLE IF EXISTS my_table `
+
+While the object no longer appears when they run SHOW TABLES, the data files still exist. Which of the following describes why the data files still exist and the metadata files were deleted?
 
 *Answer*
 
-### 
-
-**Explanation:** 
+### The table was external
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
+Which of the following Git operations must be performed outside of Databricks Repos?
 
 *Answer*
 
-### 
+### Merge
 
-**Explanation:** 
+**Explanation:** Git operations supported inside Databricks Repos:
+- Commit: You can commit changes to your repo directly from the Databricks UI.
+- Push: You can push committed changes to the remote repository.
+- Pull: You can pull the latest changes from the remote repository.
+- Clone: You can clone a remote Git repository into a Databricks Repo.
+- Git operation not supported inside Databricks Repos:
+- Merge: Merging branches (e.g., feature → main) must be done outside of Databricks, typically using: Git CLI (git merge), GitHub/GitLab/Bitbucket UI, Git desktop tools
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
+Which of the following describes the storage organization of a Delta table?
 
 *Answer*
 
-### 
-
-**Explanation:** 
+### Delta tables are stored in a collection of files that contain data, history, metadata, and other attributes.
 
 -------------------------------------------------------------------------------------------------------------------------
-
 
