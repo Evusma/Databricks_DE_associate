@@ -2,7 +2,7 @@
 
 
 ### Delta Tables
-Delta Tables are a storage format built on top of Parquet that adds powerful features like:
+Delta Tables are a storage format built on top of Parquet that adds powerful features like (Delta table = transaction layer + Parquet files):
 - ACID transactions
 - Time travel (query past versions)
 - Schema enforcement and evolution

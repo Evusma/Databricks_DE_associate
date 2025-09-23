@@ -1,3 +1,12 @@
+
+
+service principal
+time travel feature
+
+
+cluster access mode to ensure compatibility with unity catalog
+
+
 job clusters
 all purpose clusters
 endpoints Databricks SQL (SQL endpoints) They can increase the cluster size of the SQL endpoint.
