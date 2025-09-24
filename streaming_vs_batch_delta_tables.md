@@ -407,9 +407,8 @@ So the takeaway:
 - Can be used in any streaming job, DLT or not.
 
 
-
 Structured Streaming job to read from a table, manipulate the data, and then perform a streaming write into a new table.
-
+```
 (spark.table("sales")
 .withColumn("avg_price", col("sales") / col("units"))
 .writeStream
@@ -418,3 +417,4 @@ Structured Streaming job to read from a table, manipulate the data, and then per
 .trigger(once=True)
 .table("new_sales")
 )
+```

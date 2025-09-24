@@ -85,7 +85,7 @@ result.show()
 ```
 
 
-## Delta Live Tables (Pipeline Framework)
+## Delta Live Tables example (Pipeline Framework)
 With DLT, you don’t just create a table—you define a pipeline of transformations.
 
 **SQL (DLT Pipeline)**

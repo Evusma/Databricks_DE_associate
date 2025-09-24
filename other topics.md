@@ -162,4 +162,77 @@ Best practice
 - Run critical notebooks/jobs to ensure compatibility.
 - Once verified, either: Update the old cluster runtime (if you want to maintain cluster ID), or replace production cluster with the new cluster and update jobs to point to it.
 
-## transaction log , VACUUM, Z-ordering
+
+## DBFS
+In Databricks, DBFS (Databricks File System) is the distributed file system that sits on top of your cloud storage. Within DBFS, there are different types of paths: managed paths and external paths. DBFS is an abstraction layer that allows you to access your cloud storage (such as Azure Data Lake Storage, S3, GCS) using familiar file system paths like /dbfs/... in Python/Scala or dbfs:/... in Spark or SQL. DBFS paths are used to access data within Databricks and are typically mounted on top of cloud storage. 
+However, for Unity Catalog and production workloads, Databricks recommends using Unity Catalog volumes or direct cloud URIs (like abfss://...) instead of DBFS paths, as DBFS mounts and root are deprecated for new workflows.
+
+In Databricks, "mounted" typically refers to the legacy practice of linking cloud storage to the Databricks File System (DBFS) using a mount point (like /mnt/...). This allows you to access cloud storage as if it were part of the local file system
+
+**Managed DBFS** are paths that are managed within Databricks File System (DBFS) and are typically used for accessing data within Databricks (so locations managed by Databricks itself). Usually when you create tables without specifying a location, Databricks automatically stores the underlying files in a managed DBFS path, typically under: `/user/hive/warehouse/my_table/` or `/user/<workspace-user>/...`. These paths are private to your workspace or table and managed by Databricks: You don’t need to know the physical storage location in the cloud. Databricks handles file naming, organization, and cleanup. When you drop the table, the files in the managed path are automatically deleted.
+
+- Managed DBFS paths are used for accessing data within Databricks.
+- They are typically accessed using paths like /dbfs/... in Python/Scala or dbfs:/... in Spark or SQL.
+- Managed DBFS paths are part of the Databricks File System and are managed within the Databricks environment.
+
+
+**External paths** are paths that point to data stored externally, such as in cloud storage, and are accessed using cloud storage URIs (so when you explicitly provide a cloud storage location, e.g.: `abfss://<container>@<storage-account>.dfs.core.windows.net/<path>/`). Here, Databricks does not manage the files; you are responsible for the storage. Dropping the table does not delete the files in the location.
+
+Direct cloud URIs are used to access data in external locations using cloud storage URIs. Databricks supports accessing data in external volumes using cloud storage URIs. When working with external tables and external volumes, Databricks recommends reading and writing data using cloud storage URIs. Unity Catalog supports path-based access to external tables and external volumes using cloud storage URIs
+
+- External paths are used to access data stored externally, such as in cloud storage (e.g., Azure Data Lake Storage, AWS S3, Google Cloud Storage).
+- They are accessed using cloud storage URIs, such as abfss://... for Azure Data Lake Storage.
+- External paths point to data that is stored outside of the Databricks environment and are typically used for accessing data from external sources.
+
+
+Managed DBFS paths
+- Example: /user/hive/warehouse/my_table/
+- Databricks owns and manages the files.
+- If you drop a table, Databricks also deletes the files.
+- Default when you don’t specify a LOCATION in CREATE TABLE.
+
+External paths
+- Example: Cloud bucket: `s3://my-bucket/...` Mounted path: `/mnt/my_mount/...`
+- Files live in your cloud storage (S3, ADLS, GCS).
+- Databricks does not delete them if you drop the table.
+- You manage lifecycle of the files.
+
+**Volume path.** A volume path is a managed DBFS path within Unity Catalog. Managed volumes are Unity Catalog-governed storage created within the managed storage location of the containing schema. You do not need to specify a location when creating a managed volume, and all file access for data in managed volumes is through paths managed by Unity Catalog. For Unity Catalog volumes, you do not need to create a mount. Volumes are natively accessible at standard path. It provides:
+- standard path for file access: `/Volumes/<catalog>/<schema>/<volume>/<path>/<file-name>`
+- Fine-grained access control managed by Unity Catalog
+- You can use these paths in SQL, Python, or Spark to access files in the volume.
+
+Unity Catalog volumes are part of the Unity Catalog three-level namespace and provide a path-based access to data in cloud storage. The path format for accessing volumes is `/Volumes/<catalog>/<schema>/<volume>/<path>/<file-name>` or `dbfs:/Volumes/<catalog>/<schema>/<volume>/<path>/<file-name>`. Volumes are securable objects that most Azure Databricks users should use to interact directly with non-tabular data in cloud object storage.
+
+
+## transaction log 
+Delta tables maintain a transaction log (the _delta_log/ directory) that records all changes to the table, including inserts, updates, deletes, and schema changes. This log enables ACID transactions, time travel, and concurrent reads/writes, ensuring data consistency and reliability.
+
+For external Delta tables, the transaction log (_delta_log/ directory) is stored alongside the data files in the specified external cloud storage location. This log tracks all changes and enables Delta Lake features such as ACID transactions and time travel. For external Delta tables, if you drop the table, only the table metadata is removed; the data files and the _delta_log/ transaction log in the external storage location are not deleted.
+
+
+## VACUUM 
+The VACUUM command in Databricks Delta is used to clean up the transaction log by removing files that are no longer needed for query processing and are older than a retention threshold. This helps optimize the performance and manage the storage of Delta tables.
+
+If you want to run the VACUUM command on a Delta table in Databricks SQL, you can use the following syntax: `VACUUM <table_identifier> RETAIN <num HOURS | num DAYS>;`
+
+The default retention threshold for the VACUUM command in Databricks Delta is 7 days. This means that by default, the VACUUM command will retain data files for up to 7 days before cleaning up the unused files to optimize storage and performance. After running VACUUM, files older than the retention period are permanently deleted. You cannot use time travel to access data versions that depend on those deleted files.
+```
+-- Example: After this, time travel to versions older than 7 days is not possible
+VACUUM my_table;
+```
+
+## Z-ordering
+Z-ordering is a data layout optimization for Delta tables that co-locates related information in the same set of files by multi-column values. It improves data skipping and query performance, especially for queries filtering on those columns. To Z-ORDER a Delta table:
+```
+OPTIMIZE dataops_dev.schema_test.my_table
+ZORDER BY (column1, column2);
+```
+
+## Service principal
+A service principal in Azure Databricks is a security identity used by applications, services, or automation tools to access Databricks resources programmatically. It is created in Microsoft Entra ID (formerly Azure AD) and can be assigned roles and permissions to control access. Service principals are commonly used for running jobs, automation, and secure API access. A service principal is an identity used for automation and programmatic access in Azure Databricks. 
+
+You use these credentials to authenticate your automation scripts or tools with Azure Databricks, instead of using a user account.
+
+## Time travel feature
+Time travel in Delta Lake allows you to query previous versions of a Delta table using a version number or timestamp. This is only available for Delta tables, not for tables created with the CSV format.
