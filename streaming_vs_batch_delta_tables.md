@@ -28,9 +28,10 @@ def bronze_stream():
 SQL 👉 The keyword STREAMING LIVE TABLE = streaming table.
 
 ```
-CREATE OR REFRESH STREAMING LIVE TABLE bronze_stream
+CREATE OR REFRESH STREAMING TABLE bronze_stream
 COMMENT "A streaming bronze table"
 TBLPROPERTIES ("quality" = "bronze")
+SCHEDULE EVERY 1 HOUR
 AS SELECT * 
 FROM cloud_files("/mnt/raw/bronze-data", "json");
 ```
@@ -75,6 +76,7 @@ So the difference in both Python & SQL is:
     spark.table("sales")
     .withColumn("avgPrice", col("sales") / col("units"))
     .writeStream
+    .format("delta")
     .option("checkpointLocation", checkpointPath)
     .outputMode("append")
     .table("cleanedSales")
@@ -118,16 +120,16 @@ SELECT
   sales,
   units,
   sales / units AS avgPrice
-FROM STREAM(LIVE.sales);
+FROM STREAM sales;
 ```
 
 - `STREAMING LIVE TABLE` → declares that cleanedSales is a streaming table.
-- `STREAM(LIVE.sales)` → reads from the streaming source table sales.
+- `STREAM sales` → reads from the streaming source table sales.
 - The expression sales / units AS avgPrice is your computed column.
 - No need to manage .writeStream, checkpoint, or output mode → DLT handles it.
 - So in SQL you only describe the transformation logic, while in Python Structured Streaming you explicitly manage the streaming write.
 
-If sales is a Delta table (static / batch), then you don’t need the `STREAM()` wrapper or `STREAMING LIVE TABLE`. Instead, you define a batch table.
+If sales is a Delta table (static / batch), then you don’t need the `STREAM` wrapper or `STREAMING LIVE TABLE`. Instead, you define a batch table.
 ```
 CREATE OR REFRESH LIVE TABLE cleanedSales
 COMMENT "Batch table with average price per sale"
@@ -171,10 +173,7 @@ You can build stream and batch pipelines directly with PySpark / SQL:
 ```
 df = spark.read.format("delta").table("sales")   # batch read
 
-df.withColumn("avgPrice", df.sales / df.units)
-    .write.format("delta")
-    .mode("overwrite")
-    .saveAsTable("cleanedSales_batch")
+df.withColumn("avgPrice", df.sales / df.units).write.format("delta").mode("overwrite").saveAsTable("cleanedSales_batch")
 ```
 👉 sales and cleanedSales_batch here are batch tables.
 
@@ -217,6 +216,8 @@ INSERT OVERWRITE keeps the table fresh each run. The Workflow scheduler handles 
     .option("checkpointLocation", "/mnt/checkpoints/cleanedSales")
     .outputMode("append")
     .table("cleanedSales_stream")
+    .start()
+    .awaitTermination()  # method used to keep the streaming query running until it is manually stopped.
 )
 ```
 👉 cleanedSales_stream is a streaming table, continuously updated.
@@ -231,11 +232,11 @@ SELECT
   sales,
   units,
   sales / units AS avgPrice
-FROM STREAM(sales);
+FROM STREAM sales;
 ```
 
 - `CREATE OR REPLACE STREAMING TABLE` → declares the sink (cleanedSales_stream) as a streaming Delta table.
-- `STREAM(sales)` → treats the source table sales as a streaming input (new rows consumed incrementally).
+- `STREAM sales` → treats the source table sales as a streaming input (new rows consumed incrementally).
 - `TBLPROPERTIES ("delta.checkpointLocation" = "...")` → specifies the checkpoint location, just like .option("checkpointLocation", ...) in PySpark.
 
 - This is not DLT, just SQL + Structured Streaming.
@@ -283,12 +284,12 @@ query = (
     .format("delta")
     .option("checkpointLocation", "/mnt/checkpoints/cleanedSales")
     .outputMode("append")   # only append new rows
-    # .trigger(once=True)
+    # .trigger(once=True)  # Uncomment this line if you want to trigger the job only once
     .table("cleanedSales_stream")
 )
 
 # 4️⃣ Start the streaming job
-query.awaitTermination()   # keeps the job running
+query.awaitTermination(timeout=None)   # keeps the job running indefinitely
 ```
 Explanation:
 - `readStream` → streaming source
@@ -314,6 +315,7 @@ checkpointPath = "/tmp/checkpoints"
     .option("checkpointLocation", checkpointPath)
     .outputMode("complete")
     .trigger(once=True)  # ← triggers the stream only once, acts like a micro-batch
+    .format("delta")
     .table("new_sales")
 )
 ```
@@ -331,7 +333,7 @@ SELECT
   sales,
   units,
   sales / units AS avgPrice
-FROM STREAM(sales);
+FROM STREAM sales;
 ```
 Explanation:
 - `STREAM(sales)` → treats sales as a streaming source
@@ -412,6 +414,7 @@ Structured Streaming job to read from a table, manipulate the data, and then per
 (spark.table("sales")
 .withColumn("avg_price", col("sales") / col("units"))
 .writeStream
+.format("delta")
 .option("checkpointLocation", checkpointPath)
 .outputMode("complete")
 .trigger(once=True)

@@ -109,6 +109,7 @@ GROUP BY product_id;
 
 **PySpark**
 
+Using the DLT library
 ```
 import dlt
 from pyspark.sql.functions import col
@@ -116,7 +117,9 @@ from pyspark.sql.functions import col
 @dlt.table
 def bronze_sales():
     return (
-        spark.readStream.format("json").load("/mnt/raw/sales/")
+        spark.readStream
+        .format("json")
+        .load("/mnt/raw/sales/")
     )
 
 @dlt.table
@@ -135,6 +138,109 @@ def gold_sales_summary():
         .sum("amount")
     )
 ```
+Without the DLT library
+```
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, sum as _sum
+
+# Create a Spark session
+spark = SparkSession.builder.appName("DeltaLiveTablesExample").getOrCreate()
+
+# Define a Delta Live Table for streaming ingestion
+bronze_sales = (
+    spark.readStream.format("cloudFiles")
+    .option("cloudFiles.format", "json")
+    .load("/mnt/raw/sales/")
+)
+
+# Define a Delta Live Table for data transformation and quality checks
+silver_sales = (
+    bronze_sales
+    .filter(col("amount") > 0)
+    .select(
+        col("product_id"),
+        col("amount").cast("double").alias("amount"),
+        col("date").cast("date").alias("date")
+    )
+)
+
+# Define a Delta Live Table for batch aggregation
+gold_sales_summary = (
+    silver_sales
+    .groupBy("product_id")
+    .agg(_sum("amount").alias("total_sales"))
+)
+
+# Start the streaming query for bronze_sales
+query = (
+    bronze_sales
+    .writeStream
+    .format("delta")
+    .outputMode("append")
+    .option("checkpointLocation", "/mnt/checkpoint/bronze_sales")
+    .start("/mnt/delta/bronze_sales")
+)
+
+# Wait for the streaming query to finish
+query.awaitTermination()
+```
+Other example:
+```
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("DeltaPipeline").getOrCreate()
+
+# Define the schema for the streaming data
+schema = "product_id STRING, amount DOUBLE, date DATE"
+
+# Read streaming data from a JSON source
+bronze_sales = (
+    spark.readStream.format("json")
+    .schema(schema)
+    .load("/mnt/raw/sales/")
+)
+
+# Write the streaming data to a Delta table
+bronze_sales.writeStream
+    .format("delta")
+    .outputMode("append")
+    .option("checkpointLocation", "/mnt/checkpoint/bronze_sales")
+    .start("/mnt/delta/bronze_sales")
+
+# Read data from the Bronze Delta table
+bronze_sales = spark.read
+    .format("delta")
+    .load("/mnt/delta/bronze_sales")
+
+# Clean and transform the data
+silver_sales = bronze_sales
+    .withColumn("amount", col("amount").cast("double"))
+    .withColumn("date", col("date").cast("date"))
+
+# Write the transformed data to a Delta table
+silver_sales.write
+    .format("delta")
+    .mode("overwrite")
+    .save("/mnt/delta/silver_sales")
+
+# Read data from the Silver Delta table
+silver_sales = spark.read
+    .format("delta")
+    .load("/mnt/delta/silver_sales")
+
+# Perform batch aggregation
+gold_sales_summary = silver_sales
+    .groupBy("product_id")
+    .sum("amount")
+    .withColumnRenamed("sum(amount)", "total_sales")
+
+# Write the aggregated data to a Delta table
+gold_sales_summary.write
+    .format("delta")
+    .mode("overwrite")
+    .save("/mnt/delta/gold_sales_summary")
+```
+
 
 - DLT manages orchestration between bronze → silver → gold.
 - It enforces data quality rules (expect) and drops/bad-record handling automatically.

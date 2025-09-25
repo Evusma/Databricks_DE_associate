@@ -172,7 +172,8 @@ OPTIONS (
   url "jdbc:postgresql://your-host:5432/yourdb",
   dbtable "public.sales",
   user "your_username",
-  password "your_password"
+  password "your_password",
+  driver "org.postgresql.Driver"
 );
 ```
 

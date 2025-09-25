@@ -94,7 +94,7 @@ SQL
 
 Example:
 ```
-CREATE LIVE TABLE silver_orders
+CREATE OR REFRESH LIVE TABLE silver_orders
 COMMENT "Cleaned orders data"
 AS SELECT *
 FROM live.bronze_orders

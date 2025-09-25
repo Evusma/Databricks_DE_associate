@@ -18,6 +18,8 @@ Then you write it out (typically into a Delta table):
 (df.writeStream
    .format("delta")
    .option("checkpointLocation", "/mnt/checkpoints/data")
+   .outputMode("append")
+   .option("mergeSchema", "true")
    .table("bronze_table"))
 
 ```
@@ -291,3 +293,73 @@ FROM jdbc(
 ```
 - APIs (REST / Web services): Spark does not have a direct REST API connector. Use requests library in Python to pull data, then parallelize into a DataFrame; Use a connector like Autoloader → ingest raw JSON dumps from API to storage; Use external ETL tools (e.g., Fivetran, Airbyte, StreamSets) to push API data into cloud storage or databases, then read with Spark.
 - Kafka (true streaming): Use the Kafka Structured Streaming connector (format("kafka")).
+
+## Example of Auto Loader with PySpark
+
+```
+# Set Up Auto Loader Configuration
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("AutoLoaderExample").getOrCreate()
+
+# Define the path where new data files will arrive
+path = "/mnt/raw_data/"
+
+# Define the Auto Loader options
+autoLoaderOptions = {
+  "cloudFiles.format": "json",
+  "cloudFiles.maxFilesPerTrigger": 1
+}
+
+# Create a streaming DataFrame using Auto Loader
+streamingDF = spark.readStream
+    .format("cloudFiles")
+    .options(**autoLoaderOptions)
+    .load(path)
+
+# Example processing logic
+processedDF = streamingDF
+    .select("column1", "column2")
+
+# Start the Streaming Query
+query = processedDF.writeStream
+    .format("delta")
+    .outputMode("append")
+    .option("checkpointLocation", "/mnt/checkpoint/")
+    .start("/mnt/delta_output/")
+
+query.awaitTermination()
+
+```
+
+## Example of Auto Loader with SQL
+
+```
+CREATE DATABASE IF NOT EXISTS my_database;
+USE my_database;
+
+-- Define the path where new data files will arrive
+CREATE TABLE IF NOT EXISTS auto_loader_table
+USING cloudFiles
+OPTIONS (
+  path "/mnt/raw_data/",
+  format "json",
+  maxFilesPerTrigger "1"
+);
+
+-- Define the processing logic for the streaming data
+CREATE OR REPLACE TEMPORARY VIEW streaming_data_view AS
+SELECT column1, column2
+FROM auto_loader_table;
+
+-- Process the streaming data
+CREATE OR REPLACE TEMPORARY VIEW processed_data_view AS
+SELECT *
+FROM streaming_data_view;
+
+-- Write the processed data to a Delta table
+CREATE TABLE IF NOT EXISTS processed_data_table
+USING delta
+AS SELECT * FROM processed_data_view;
+
+```
