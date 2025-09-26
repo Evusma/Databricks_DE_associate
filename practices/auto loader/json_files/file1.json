@@ -1,0 +1,26 @@
+[
+  {
+    "Id": 1,
+    "name": "Alice",
+    "age": 25,
+    "money": 1200,
+    "sales": 4500,
+    "units": 45
+  },
+  {
+    "Id": 2,
+    "name": "Bob",
+    "age": 32,
+    "money": 850,
+    "sales": 3000,
+    "units": 30
+  },
+  {
+    "Id": 3,
+    "name": "Charlie",
+    "age": 29,
+    "money": 1500,
+    "sales": 6000,
+    "units": 60
+  }
+]

@@ -1,0 +1,9 @@
+{
+	"Id": 1,
+	"name": "Alice",
+	"age": 25,
+	"money": 1200,
+	"sales": 4500,
+	"units": 45,
+	"city": "Paris"
+}

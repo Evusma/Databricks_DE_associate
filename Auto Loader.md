@@ -7,9 +7,23 @@ Auto Loader is defined by **cloudFiles**.
 Using it:
 
 ```
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+
+# set up data structure
+schema = StructType([
+   StructField("Id", IntegerType(), True),
+   StructField("name", StringType(), True),
+   StructField("age", IntegerType(), True),
+   StructField("money", IntegerType(), True),
+   StructField("sales", IntegerType(), True),
+   StructField("units", IntegerType(), True),
+])
+
 df = (spark.readStream
       .format("cloudFiles")
-      .option("cloudFiles.format", "json")   # or csv, parquet, etc.
+      .option("cloudFiles.format", "csv")   # or csv, parquet, etc.
+      .option("header", "true")
+      .schema(schema)  # Schema Enforcement
       .load("/mnt/raw/data"))
 
 ```
@@ -19,9 +33,14 @@ Then you write it out (typically into a Delta table):
    .format("delta")
    .option("checkpointLocation", "/mnt/checkpoints/data")
    .outputMode("append")
-   .option("mergeSchema", "true")
    .table("bronze_table"))
 
+# Continuous running streaming Job
+
+# the streaming query is managed through a StreamingQuery object, not the DataFrame.
+# To stop the stream 
+for q in spark.streams.active:
+    q.stop()
 ```
 
 ## Benefits
@@ -71,16 +90,20 @@ If a new column shows up in the JSON, Auto Loader adds it automatically instead 
 df = (spark.readStream
       .format("cloudFiles")
       .option("cloudFiles.format", "json")
-      .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
+      .option("multiLine", "true")  # to read the json without problems
+      .option("cloudFiles.schemaLocation", "/mnt/autoloader/_schemas_json")  # needed
+      .option("cloudFiles.schemaEvolutionMode", "addNewColumns")  # needed
       .load("/mnt/raw/"))
 ```
+*With SQL, Auto Loader appears only in Delta Life pipelines*
+[auto loader examples](https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/patterns?language=Python)
 ```
-CREATE OR REFRESH STREAMING TABLE bronze
+CREATE OR REFRESH STREAMING TABLE autoloder_sql
 AS SELECT *
-FROM cloud_files(
+FROM STREAM read_files(
   '/mnt/raw/',
-  'json',
-  map('cloudFiles.schemaEvolutionMode', 'addNewColumns')
+  format => 'json',
+  multiline => 'true'
 );
 ```
 
@@ -91,18 +114,9 @@ Any extra/unexpected fields go into the _rescued_data column (JSON string) inste
 df = (spark.readStream
       .format("cloudFiles")
       .option("cloudFiles.format", "csv")
-      .option("rescuedDataColumn", "_rescued_data")
+      .option("rescuedDataColumn", "_rescued_data")  ##
       .load("/mnt/raw/"))
 
-```
-```
-CREATE OR REFRESH STREAMING TABLE bronze
-AS SELECT *
-FROM cloud_files(
-  '/mnt/raw/',
-  'csv',
-  map('rescuedDataColumn', '_rescued_data')
-);
 ```
 
 **Bad / Corrupted Records**
@@ -112,37 +126,19 @@ Corrupt rows are quarantined into /mnt/errors/ instead of failing the entire job
 df = (spark.readStream
       .format("cloudFiles")
       .option("cloudFiles.format", "json")
-      .option("badRecordsPath", "/mnt/errors/")
+      .option("badRecordsPath", "/mnt/errors/")  ##
       .load("/mnt/raw/"))
-```
-```
-CREATE OR REFRESH STREAMING TABLE bronze
-AS SELECT *
-FROM cloud_files(
-  '/mnt/raw/',
-  'json',
-  map('badRecordsPath', '/mnt/errors/')
-);
 ```
 
 **Enforcing Schema (strict mode)**
-
 ```
 df = (spark.readStream
       .format("cloudFiles")
-      .schema(userDefinedSchema)  # enforce schema
+      .schema(Schema)  # enforce schema
       .option("cloudFiles.schemaLocation", "/mnt/schema/")
       .load("/mnt/raw/"))
 ```
-```
-CREATE OR REFRESH STREAMING TABLE bronze
-AS SELECT *
-FROM cloud_files(
-  '/mnt/raw/',
-  'json',
-  map('cloudFiles.schemaLocation', '/mnt/schema/')
-);
-```
+
 
 ## stream vs batch tables
 
@@ -162,21 +158,6 @@ df = (spark.readStream
    .table("bronze"))
 
 ```
-```
-CREATE OR REFRESH STREAMING TABLE bronze
-AS SELECT *
-FROM cloud_files(
-  '/mnt/raw/',
-  'parquet'
-);
-
-```
-In the SQL query, cloud_files(path, format, options...)
-- This is the SQL function wrapper around spark.readStream.format("cloudFiles").
-- First arg = storage location.
-- Second arg = file format (parquet, csv, json, etc.).
-- You can pass extra options (like schema evolution, rescued data column).
-- The checkpointing is handled automatically by the streaming table definition (you don’t have to specify it explicitly like in PySpark).
 
 
 **Batch ingestion**
@@ -185,26 +166,18 @@ Auto Loader also has a trigger for batch (.trigger(once=True) or .trigger(availa
 (df.writeStream
    .format("delta")
    .option("checkpointLocation", "/mnt/chk")
-   .trigger(availableNow=True)  # batch-like mode
+   .trigger(availableNow=True)  ## batch-like mode
    .table("bronze_batch"))
 ```
-
-```
-CREATE OR REFRESH STREAMING TABLE bronze_batch
-AS COPY INTO bronze_batch
-FROM cloud_files(
-  '/mnt/raw/',
-  'parquet'
-);
-
-```
-In SQL the batch-like mode (trigger(availableNow=True)) is expressed using COPY INTO inside a streaming table definition.
 
 **Pure One-Time Batch Ingestion**
 ```
 df = (spark.read
-      .format("parquet")
+      .format("json")
+      .option("multiLine", True)
       .load("/mnt/raw/"))
+
+display(df_json)
 
 df.write.format("delta").mode("append").saveAsTable("bronze_batch_once")
 ```
@@ -270,9 +243,10 @@ Scope of Auto Loader:
 
 Whenever you see "cloudFiles" (PySpark) or cloud_files() (SQL) → that’s Auto Loader in action.
 
+## DB, API
 If you want to ingest from databases, APIs, or Kafka, you need different connectors:
 - Databases: JDBC connector in Spark. Works for batch ingestion (not continuous streaming).
-
+[configure DB connector](https://spark.apache.org/docs/latest/sql-data-sources-jdbc.html#data-source-option)
 ```
 jdbcDF = (spark.read
     .format("jdbc")
@@ -312,54 +286,26 @@ autoLoaderOptions = {
 }
 
 # Create a streaming DataFrame using Auto Loader
-streamingDF = spark.readStream
+streamingDF = (
+    spark.readStream
     .format("cloudFiles")
     .options(**autoLoaderOptions)
     .load(path)
+)
 
 # Example processing logic
-processedDF = streamingDF
-    .select("column1", "column2")
+processedDF = streamingDF.select("column1", "column2")
 
 # Start the Streaming Query
-query = processedDF.writeStream
+query = (
+     processedDF.writeStream
     .format("delta")
     .outputMode("append")
     .option("checkpointLocation", "/mnt/checkpoint/")
     .start("/mnt/delta_output/")
+)
 
 query.awaitTermination()
 
 ```
 
-## Example of Auto Loader with SQL
-
-```
-CREATE DATABASE IF NOT EXISTS my_database;
-USE my_database;
-
--- Define the path where new data files will arrive
-CREATE TABLE IF NOT EXISTS auto_loader_table
-USING cloudFiles
-OPTIONS (
-  path "/mnt/raw_data/",
-  format "json",
-  maxFilesPerTrigger "1"
-);
-
--- Define the processing logic for the streaming data
-CREATE OR REPLACE TEMPORARY VIEW streaming_data_view AS
-SELECT column1, column2
-FROM auto_loader_table;
-
--- Process the streaming data
-CREATE OR REPLACE TEMPORARY VIEW processed_data_view AS
-SELECT *
-FROM streaming_data_view;
-
--- Write the processed data to a Delta table
-CREATE TABLE IF NOT EXISTS processed_data_table
-USING delta
-AS SELECT * FROM processed_data_view;
-
-```
