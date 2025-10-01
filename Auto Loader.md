@@ -95,7 +95,7 @@ df = (spark.readStream
       .option("cloudFiles.schemaEvolutionMode", "addNewColumns")  # needed
       .load("/mnt/raw/"))
 ```
-*With SQL, Auto Loader appears only in Delta Life pipelines*
+*With SQL, Auto Loader appears only in Lakeflow Declarative pipelines*
 [auto loader examples](https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/patterns?language=Python)
 ```
 CREATE OR REFRESH STREAMING TABLE autoloder_sql
