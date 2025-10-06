@@ -326,18 +326,17 @@ Rule of Thumb:
 - Mix when: bronze is streaming for raw capture, but silver/gold are batch for easier aggregation and cost control.
 
 
-## Batch mode in DLT
-DLT settings: pipeline mode triggered (batch) or continuoius (stream) -> chosse the pipeline mode based on the latency and cost requirements.
+## Batch mode in Lakeflow Declarative pipelines
+Settings: pipeline mode triggered (batch) or continuoius (stream) -> chose the pipeline mode based on the latency and cost requirements.
 
 - Triggered pipelines update once and then shut down the cluster until the next manual or scheduled update.
 - Continuous pipelines keep an always running cluster that ingests new data as it arrives.
 
-In batch mode, each run processes only new data since the last successful run → that’s the auto-incremental behavior (only processes new data). When you define a batch pipeline, DLT automatically processes only the delta (incremental changes).
+In batch mode, each run processes only new data since the last successful run → that’s the auto-incremental behavior (only processes new data). When you define a batch pipeline, the pipeline automatically processes only the delta (incremental changes).
 
 This is similar to how structured streaming does incremental processing.
 
-How to schedule batches (e.g., every 30 minutes): You don’t set this inside the SQL/Python code itself. The schedule is defined in the DLT pipeline settings in the Databricks UI
-
+How to schedule batches (e.g., every 30 minutes): You don’t set this inside the SQL/Python code itself. The schedule is defined in the pipeline settings in the Databricks UI
 
 Example: Gold every 30 minutes
 - Bronze (streaming)
@@ -346,7 +345,7 @@ Example: Gold every 30 minutes
 
 You’d configure the pipeline schedule:
 - Bronze & Silver → continuously updated because they are streaming tables.
-- Gold → defined as a normal LIVE table (batch mode). DLT will refresh it on each scheduled run (every 30 minutes).
+- Gold → defined as a materialize view (batch mode). The pipeline will refresh it on each scheduled run (every 30 minutes).
 
 So, the gold table will always be snapshotted & re-aggregated every half hour.
 

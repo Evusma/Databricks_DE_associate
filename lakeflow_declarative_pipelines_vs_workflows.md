@@ -18,16 +18,16 @@ Implications
 - Some API changes (e.g. AUTO CDC replacing APPLY CHANGES) are being encouraged in Lakeflow Declarative Pipelines. 
 
 
-## Difference between Databricks DLT (Delta Live Tables) and Workflows.
+## Difference between Databricks Lakeflow Declarative Pipelines and Workflows.
 
 They’re both orchestration/automation tools in Databricks, but they serve different purposes:
 
 
-### Delta Live Tables (DLT)
+### Lakeflow Declarative Pipelines
 
-What it is: A framework for declarative data pipelines. Instead of writing procedural ETL jobs, you define what tables you want and how they are derived, and DLT manages the execution.
+What it is: A framework for declarative data pipelines. Instead of writing procedural ETL jobs, you define what tables you want and how they are derived, and pipelines manages the execution.
 
-When you create a Delta Live Tables (DLT) pipeline, you define your transformations in SQL or Python (via PySpark).
+When you create a Lakeflow Declarative Pipelines, you define your transformations in SQL or Python (via PySpark).
 
 Main focus: Data pipeline development and reliability.
 
@@ -43,7 +43,7 @@ Analogy: Think of it like dbt inside Databricks, but with runtime management, sc
 
 Pipeline definition is always tied to a notebook or a Python script.
 - You define your transformations in SQL or Python inside a notebook (or optionally, a .py script from Repos).
-- Without that, the pipeline has nothing to run — because DLT is declarative and must know your table definitions.
+- Without that, the pipeline has nothing to run — because it is declarative and must know your table definitions.
 
 Notebook (or .py file) is required.
 
@@ -58,8 +58,8 @@ Features:
 
 - Run any type of task: notebooks, Spark jobs, SQL queries, ML model training, Python scripts, even external tasks.
 - Build multi-task workflows with dependencies (like Airflow or Prefect, but inside Databricks).
-- Can include DLT pipelines as a task in the workflow.
-- Good for orchestrating end-to-end processes: ingestion → transformation (maybe via DLT) → ML scoring → dashboard refresh.
+- Can include Lakeflow Declarative pipelines as a task in the workflow.
+- Good for orchestrating end-to-end processes: ingestion → transformation → ML scoring → dashboard refresh.
 
 Analogy: Think of it as Airflow built into Databricks, but with native integration.
 
@@ -69,23 +69,23 @@ Much more flexible: Can run a notebook task, Or run a Python script, JAR, SQL st
 
 ## Key Difference
 
-DLT = specialized for data pipelines (transformations + quality + lineage).
+Lakeflow Declarative Pipelines = specialized for data pipelines (transformations + quality + lineage).
 
-Workflows = general orchestration tool (runs DLT pipelines and any other tasks).
+Workflows = general orchestration tool (runs Lakeflow Declarative Pipelines pipelines and any other tasks).
 
 
 ## Example Use Case:
 
-Use DLT to create your Silver and Gold tables with expectations for data quality.
+Use pipelines to create your Silver and Gold tables with expectations for data quality.
 
 Use Workflows to:
-- Trigger the DLT pipeline,
+- Trigger the pipeline,
 - Run ML training on the Gold table,
 - Send notifications if something fails,
 - Refresh dashboards afterwards.
 
 
-## Languages Supported in DLT
+## Languages Supported in Lakeflow Declarative Pipelines
 
 SQL
 
@@ -94,35 +94,41 @@ SQL
 
 Example:
 ```
-CREATE OR REFRESH LIVE TABLE silver_orders
-COMMENT "Cleaned orders data"
-AS SELECT *
-FROM live.bronze_orders
-WHERE status IS NOT NULL;
+CREATE OR REFRESH STREAMING TABLE bronze_sales
+AS
+SELECT 
+*,
+current_timestamp() AS processing_time,
+_metadata.file_name AS file
+ FROM STREAM read_files(
+  '/Volumes/sales/json/',
+  format => 'json',
+  multiline => 'true'
+);
 ```
 
 Python (PySpark or SQL inside Python)
 
-You write functions that return a DataFrame and decorate them with @dlt.table (or @dlt.view).
+You write functions that return a DataFrame and decorate them with @dp.table (or @dp.view).
 
 Example:
 ```
-import dlt
+from pyspark import pipelines as dp
 from pyspark.sql.functions import col
 
-@dlt.table(
+@dp.table(
     comment="Filtered orders with non-null status"
 )
 def silver_orders():
     return (
-        dlt.read("bronze_orders")
+        dp.read("bronze_orders")
           .where(col("status").isNotNull())
     )
 ```
 
 Not Supported: Scala, R, Raw Spark jobs outside of PySpark/SQL context
 
-DLT is intentionally restricted to SQL + Python so it can:
+Lakeflow Declarative Pipelines is intentionally restricted to SQL + Python so it can:
 - Track lineage automatically,
 - Apply data quality expectations,
 - Optimize execution,
@@ -135,7 +141,7 @@ Workflows are not tied to one language. Instead, they can orchestrate any type o
 
 Supported task types (and thus languages):
 - Databricks Notebook → can be in Python, SQL, Scala, or R (depending on cluster/runtime).
-- DLT Pipeline → (which itself is SQL/Python, as we said).
+- Lakeflow Declarative Pipelines → (which itself is SQL/Python, as we said).
 - Python Script (from DBFS, Repos, or remote source).
 - Spark JAR task → for Scala/Java.
 - SQL task → runs SQL queries directly in a SQL warehouse.
@@ -144,13 +150,13 @@ Supported task types (and thus languages):
 
 You could create a Workflow that:
 - Runs a Python notebook to ingest data,
-- Triggers a DLT pipeline (SQL/Python) to process raw → silver → gold,
+- Triggers a Lakeflow Declarative Pipelines (SQL/Python) to process raw → silver → gold,
 - Runs a Scala JAR task for complex ML feature engineering,
 - Runs a SQL task to refresh a dashboard table,
 - Sends a Slack notification with a Python script.
 
-Comparison with DLT
-- DLT: SQL & Python only → specialized for declarative pipelines.
+Comparison with Lakeflow Declarative Pipelines
+- Lakeflow Declarative Pipelines: SQL & Python only → specialized for declarative pipelines.
 - Workflows: Language-agnostic → orchestrates any task type (Python, SQL, Scala, R, Java, dbt, shell, etc.).
 
 
@@ -162,20 +168,20 @@ When you go to the Jobs & Pipelines tab, you’ll see options like:
 - Job
 
 
--> DLT Pipelines
+-> Lakeflow Declarative Pipelines
 
-If you click Ingestion pipeline or ETL pipeline, you are creating a Delta Live Tables (DLT) pipeline.
+If you click Ingestion pipeline or ETL pipeline, you are creating a Lakeflow Declarative Pipelines.
 
-Both options bring you to the same DLT creation flow — the only difference is the preset template:
+Both options bring you to the same pipeline creation flow — the only difference is the preset template:
 - Ingestion pipeline → usually preconfigures Auto Loader for streaming ingestion into a Bronze table.
-- ETL pipeline → gives you a blank DLT pipeline where you define your own Bronze → Silver → Gold logic.
+- ETL pipeline → gives you a blank pipeline where you define your own Bronze → Silver → Gold logic.
 
 
 -> Jobs
 
 If you click Job, you’re creating a Databricks Workflow job.
 This is for orchestrating notebooks, JARs, SQL tasks, Python scripts, etc.
-Not a DLT pipeline (though you can call a DLT pipeline as a task inside a Workflow).
+Not a Lakeflow Declarative Pipelines pipeline (though you can call it as a task inside a Workflow).
 
 
 ## Jobs vs Pipelines
@@ -185,11 +191,11 @@ In Databricks certification context:
 Jobs = Workflows
 - A Job in the UI = a Databricks Workflow.
 - It’s the general-purpose orchestration engine.
-- Can run notebooks, Python scripts, SQL, JARs, dbt, shell commands, or even DLT pipelines as tasks.
+- Can run notebooks, Python scripts, SQL, JARs, dbt, shell commands, or even pipelines as tasks.
 
 
-Pipelines = Delta Live Tables (DLT)
-- A Pipeline in the UI = a DLT pipeline.
+Pipelines = Lakeflow Declarative Pipelines
+- A Pipeline in the UI = a Lakeflow Declarative Pipelines
 - Specialized for data ingestion and ETL (Bronze → Silver → Gold).
 - Written only in SQL or Python (PySpark).
 - Brings built-in lineage, expectations, auto-scaling, and reliability.
