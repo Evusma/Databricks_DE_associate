@@ -106,6 +106,7 @@ Types of tables here
 
 - cleanedSales: definitely a streaming table because it’s the sink of .writeStream. It will keep receiving new rows in real time as Spark processes the stream.
 
+![batch-streaming](/images/batch-streaming.png)
 
 ## Example SQL
 
@@ -421,3 +422,7 @@ Structured Streaming job to read from a table, manipulate the data, and then per
 .table("new_sales")
 )
 ```
+
+![triggers](./images/triggers_types.png)
+
+![output](./images/output_modes.png)

@@ -89,7 +89,7 @@ Use Workflows to:
 
 SQL
 
-- You can create tables with CREATE LIVE TABLE ... AS SELECT ...
+- You can create tables with CREATE STREAMING TABLE ... AS SELECT ...
 - Perfect for declarative transformations.
 
 Example:

@@ -122,6 +122,7 @@ GROUP BY Id;
 
 - The dependencies are automatic: gold depends on silver, silver depends on bronze.
 - If bronze updates, the pipeline will trigger downstream tables.
+- You add this code as the source code on the settings page of the pipeline. You also set up there the mode, schedule, and other settings.
 
 **PySpark**
 
@@ -169,8 +170,10 @@ def gold_sales_summary():
         )
     )
 ```
+- You add this code as the source code on the settings page of the pipeline. You also set up there the mode and other settings.
 
-Without the DP library: example of a streaming pipeline using only PySpark DataFrame and Structured Streaming APIs
+
+Without the DP library: example of a **streaming pipeline using only PySpark DataFrame and Structured Streaming APIs**. This is not a declarative pipeline, but rather a traditional Spark streaming job. It must include in the code the orchestration logic, data quality checks, and the **streaming queries.**
 ```
 from pyspark.sql.functions import col, sum as _sum
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
@@ -261,7 +264,7 @@ So the difference in code:
 - Lakeflow Declarative Pipelines → you declare a pipeline of transformations, and Databricks manages the orchestration, quality, and produces Delta tables as the output.
 
 
-## The bronze table 
+## The bronze table in a pipeline
 The bronze table can be created from either batch or streaming data, depending on how you set it up in the pipeline.
 
 **Stream**
@@ -287,14 +290,12 @@ Streaming mode vs batch mode
 - Streaming mode → good when you need near real-time updates (new files, Kafka messages, etc.).
 
 
-## Stream vs batch
-when you create streaming tables in the pipeline (like your bronze and silver), they are still Delta tables under the hood, so they live in the catalog just like other Delta tables.
-
-By default, the pipeline creates them in the hive_metastore unless you specify a different catalog/schema.
+## Stream vs batch: Lakeflow Declarative pipelines
+when you create streaming tables in the pipeline (like your bronze and silver), they are Delta tables under the hood, so they live in the catalog just like other Delta tables. By default, the pipeline creates them in the hive_metastore unless you specify a different catalog/schema.
 
 You can query them with SQL or PySpark: `SELECT * FROM bronze_sales;`
 
-The streaming nature is only about how they are updated (via Structured Streaming in the pipeline). Once materialized, they look and behave like any other Delta table in the catalog.
+The streaming nature is only about how they are updated. Once materialized, they look and behave like any other Delta table in the catalog.
 You can use them in:
 - Databricks SQL queries
 - BI tools (Power BI, Tableau, etc.)
