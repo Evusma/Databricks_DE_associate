@@ -1,5 +1,4 @@
 ## From June 2025, Databricks introduced new naming for both DLT and Jobs/Workflows.
-
 Databricks Jobs (i.e. Workflows) is now called Lakeflow Jobs
 - June 11, 2025
 - The product known as Databricks Jobs is now Lakeflow Jobs. No migration is required to use Lakeflow Jobs.
@@ -19,12 +18,10 @@ Implications
 
 
 ## Difference between Databricks Lakeflow Declarative Pipelines and Workflows.
-
 They’re both orchestration/automation tools in Databricks, but they serve different purposes:
 
 
 ### Lakeflow Declarative Pipelines
-
 What it is: A framework for declarative data pipelines. Instead of writing procedural ETL jobs, you define what tables you want and how they are derived, and pipelines manages the execution.
 
 When you create a Lakeflow Declarative Pipelines, you define your transformations in SQL or Python (via PySpark).
@@ -45,14 +42,40 @@ Pipeline definition is always tied to a notebook or a Python script.
 - You define your transformations in SQL or Python inside a notebook (or optionally, a .py script from Repos).
 - Without that, the pipeline has nothing to run — because it is declarative and must know your table definitions.
 
-Notebook (or .py file) is required.
+A notebook with python or sql, a .py file or a .sql file is required as source code with the description of the tables and transformations.
 
+![pipeline](./images/ldpipeline.png)
 
 ## Databricks Workflows
+It is a general-purpose orchestration tool for any jobs in Databricks.
 
-What it is: A general-purpose orchestration tool for any jobs in Databricks.
+Main focus: Job scheduling and orchestration (not just data pipelines). When you schedule a lakeflow declarative pipeline on the UI pipeline page (for example, run the pipeline every day at 12am), you are creating a workflow job.
 
-Main focus: Job scheduling and orchestration (not just data pipelines).
+The job cluster will stop after the tasks are completed. If you create a job from a streaming pyspark query (not a lakeflow declarative pipeline), the job cluster will run indefinitely if you do not indicate in you code `query.stop()` after your processing logic. From AI databrocks assistant:
+
+> To schedule a PySpark streaming query as a job in Azure Databricks, follow these steps:
+> - Develop your streaming query in a Databricks notebook using PySpark.
+> - Save the notebook.
+> - In the Databricks workspace, go to Jobs & Pipelines.
+> - Create a new job and select your notebook as the task.
+> - Add a trigger to schedule the job (choose Simple or Advanced scheduling options).
+> - When the job runs, it will execute your streaming query on the cluster according to the schedule.
+>
+> Databricks recommends using jobs compute (not all-purpose clusters) for production streaming workloads. If you use the continuous trigger in your streaming query, Databricks will automatically restart the job on failure and prevent concurrent runs. You do not need to call awaitTermination() in your notebook; the job will manage the streaming query lifecycle for you
+>
+> To stop a PySpark streaming query so that your job finishes, you should call the .stop() method on the StreamingQuery object. This will gracefully stop the streaming computation and allow your job to complete
+>
+> To ensure your processing logic is complete before calling query.stop(), you should:
+> - Place all necessary processing steps before the query.stop() call.
+> - If you need to wait for the streaming query to process all available data (for example, in micro-batch mode), use query.processAllAvailable() before stopping the query. This method blocks until all available data has been processed.
+>
+> This approach ensures that your streaming job processes all data up to the current point before shutting down the query gracefully. If you do not call query.stop() (or do not otherwise terminate the streaming query), your PySpark streaming job will continue running indefinitely and the job will not finish on its own. This is because streaming queries are designed to run continuously, processing new data as it arrives.
+>
+> You cannot use query.awaitTermination() as a replacement for query.stop().
+> - query.awaitTermination() blocks the code execution and waits for the streaming query to finish (for example, if it is stopped from another thread or fails).
+> - query.stop() actively stops the streaming query.
+>
+> If you want to programmatically stop the query, you must call query.stop(). If you only call query.awaitTermination(), the query will keep running indefinitely unless stopped elsewhere.
 
 Features:
 
@@ -66,16 +89,16 @@ Analogy: Think of it as Airflow built into Databricks, but with native integrati
 ✅ Does not require a notebook. You can orchestrate without ever touching one.
 Much more flexible: Can run a notebook task, Or run a Python script, JAR, SQL statement, dbt task, or shell command.
 
+![job runs](./images/job_runs.png)
+![job tasks](./images/job_tasks.png)
 
 ## Key Difference
-
 Lakeflow Declarative Pipelines = specialized for data pipelines (transformations + quality + lineage).
 
 Workflows = general orchestration tool (runs Lakeflow Declarative Pipelines pipelines and any other tasks).
 
 
 ## Example Use Case:
-
 Use pipelines to create your Silver and Gold tables with expectations for data quality.
 
 Use Workflows to:
@@ -86,7 +109,6 @@ Use Workflows to:
 
 
 ## Languages Supported in Lakeflow Declarative Pipelines
-
 SQL
 
 - You can create tables with CREATE STREAMING TABLE ... AS SELECT ...
@@ -105,6 +127,15 @@ _metadata.file_name AS file
   format => 'json',
   multiline => 'true'
 );
+
+CREATE OR REFRESH MATERIALIZED VIEW silver_sales
+AS SELECT Id, CAST(money AS DOUBLE) AS money, processing_time, file
+FROM bronze_sales;
+
+CREATE OR REFRESH MATERIALIZED VIEW gold_sales_summary
+AS SELECT Id, SUM(money) AS total_sales
+FROM silver_sales
+GROUP BY Id;
 ```
 
 Python (PySpark or SQL inside Python)
@@ -136,7 +167,6 @@ Lakeflow Declarative Pipelines is intentionally restricted to SQL + Python so it
 
 
 ## Languages Supported in Databricks Workflows
-
 Workflows are not tied to one language. Instead, they can orchestrate any type of task you can run in Databricks.
 
 Supported task types (and thus languages):
@@ -161,7 +191,6 @@ Comparison with Lakeflow Declarative Pipelines
 
 
 ## Databricks UI
-
 When you go to the Jobs & Pipelines tab, you’ll see options like:
 - Ingestion pipeline
 - ETL pipeline
@@ -185,7 +214,6 @@ Not a Lakeflow Declarative Pipelines pipeline (though you can call it as a task 
 
 
 ## Jobs vs Pipelines
-
 In Databricks certification context:
 
 Jobs = Workflows
@@ -199,3 +227,147 @@ Pipelines = Lakeflow Declarative Pipelines
 - Specialized for data ingestion and ETL (Bronze → Silver → Gold).
 - Written only in SQL or Python (PySpark).
 - Brings built-in lineage, expectations, auto-scaling, and reliability.
+
+## Emailing query results to a user
+You can use Databricks Workflows to email query results to a user. This is a common use case for Workflows.
+> To run a job in Databricks, execute a SQL query, and email the results, you typically need to:
+> - Run the SQL query in a notebook or job.
+> - Collect the results (e.g., as a Pandas DataFrame or CSV).
+> - Send the results via email using an SMTP server.
+> - Here’s a step-by-step example using PySpark and Python’s smtplib:
+> ```import smtplib
+> from email.mime.multipart import MIMEMultipart
+> from email.mime.text import MIMEText
+>
+> # 1. Run your SQL query
+> df = spark.sql("SELECT * FROM your_table LIMIT 10")
+> result_html = df.toPandas().to_html(index=False)
+>
+> # 2. Set up email parameters
+> sender = "your_email@example.com"
+> receiver = "recipient@example.com"
+> subject = "Databricks SQL Query Results"
+> body = f"Here are the results:<br><br>{result_html}"
+>
+> # 3. Create the email message
+> msg = MIMEMultipart()
+> msg['From'] = sender
+> msg['To'] = receiver
+> msg['Subject'] = subject
+> msg.attach(MIMEText(body, 'html'))
+>
+> # 4. Send the email (using your SMTP server)
+> with smtplib.SMTP("smtp.yourserver.com", 587) as server:
+>     server.starttls()
+>     server.login("your_username", "your_password")
+>     server.sendmail(sender, receiver, msg.as_string())
+>```
+> Notes:
+> - You must have access to an SMTP server (e.g., Gmail, Outlook, or your company’s server).
+> -For sensitive credentials, use Databricks secrets or environment variables.
+> - For large result sets, consider attaching a CSV file instead of embedding HTML.
+> 
+> Alternative: If you use Databricks Jobs, you can configure job email notifications for job success/failure, but not for sending query results directly. For custom content, use the above approach in a notebook task.
+
+
+## manage jobs in Databricks programmatically
+You can create and manage jobs in Databricks programmatically using the Databricks REST API or the Databricks CLI. This allows you to automate job creation, scheduling, and management without using the Databricks UI.
+
+Here are the general steps to create a job using Python and the Databricks API:
+- Authenticate: Obtain an access token or API key to authenticate your requests to the Databricks API.
+- Create a Job Definition: Define the job details such as the notebook path, cluster configuration, and schedule.
+- Submit the Job: Use the API to submit the job for execution.
+
+Here is an example using the Databricks CLI in Python to create a job:
+```
+import subprocess
+
+# Define the job configuration in JSON format
+job_config = {
+    "name": "MyJob",
+    "new_cluster": {
+        "spark_version": "7.3.x",
+        "node_type_id": "Standard_DS3_v2",
+        "num_workers": 2
+    },
+    "notebook_task": {
+        "notebook_path": "/Users/myuser/my-notebook"
+    },
+    "schedule": {
+        "quartz_cron_expression": "0 15 10 ? * *"
+    }
+}
+
+# Write the job configuration to a temporary JSON file
+with open("job_config.json", "w") as file:
+    json.dump(job_config, file)
+
+# Use the Databricks CLI to create the job
+subprocess.run(["databricks", "jobs", "create", "--json-file", "job_config.json"])
+
+```
+You can also achieve similar functionality using the Databricks REST API directly in Python by making HTTP requests to the Databricks API endpoints.
+
+```
+import requests
+import json
+
+# --- create a job using the Databricks API ---
+
+# Define your Databricks API token
+token = "YOUR_DATABRICKS_API_TOKEN"
+
+# Define the base URL for the Databricks API
+base_url = "https://<databricks-instance>/api/2.0/"
+
+# Define the headers with the authorization token
+headers = {
+    "Authorization": f"Bearer {token}",
+    "Content-Type": "application/json"
+}
+
+# Define the job configuration
+job_config = {
+    "name": "MyJob",
+    "new_cluster": {
+        "spark_version": "7.3.x",
+        "node_type_id": "Standard_DS3_v2",
+        "num_workers": 2
+    },
+    "notebook_task": {
+        "notebook_path": "/Users/myuser/my-notebook"
+    },
+    "schedule": {
+        "quartz_cron_expression": "0 15 10 ? * *"
+    }
+}
+
+# Create the job using the Databricks API
+response = requests.post(base_url + "jobs/create", headers=headers, data=json.dumps(job_config))
+
+if response.status_code == 200:
+    print("Job created successfully.")
+else:
+    print("Error creating job:", response.text)
+
+
+# --- list all jobs using the Databricks API ---
+# Example: Get a list of jobs in the workspace
+response = requests.get(base_url + "jobs/list", headers=headers)
+
+if response.status_code == 200:
+    jobs = response.json()["jobs"]
+    for job in jobs:
+        print(job["settings"]["name"])
+else:
+    print("Error fetching jobs:", response.text)
+```
+
+Please refer to the Databricks API documentation for more details on how to interact with the API programmatically: [Databricks API](https://docs.databricks.com/aws/en/reference/api)
+
+## Types of triggers in the streaming pyspark
+- Default: process each micro-batch as soon as the previous one has been processed.
+- Fixed interval: micro_batches are processed at a fixed interval time specified by the user. `.trigger(processingTime='10 seconds')`
+- One-time: process all available data as a single micro-batch and then stop the query. `.trigger(once=True)`
+- Available-now: like trigger once, available data processed before query stops, but in multiple batches instead of one. `.trigger(availableNow=True)`
+- Continuous processing: long-running taks that continuously read, process and write data as soon as it arrives. `.trigger(continuous='1 second')`
