@@ -9,15 +9,15 @@ A data organization leader is upset about the data analysis team’s reports bei
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-A data engineer has three notebooks in an ELT pipeline. The notebooks need to be executed in a specific order for the pipeline to complete successfully. The data engineer would like to use Delta Live Tables to manage this process. Which of the following steps must the data engineer take as part of implementing this pipeline using Delta Live Tables?
+A data engineer has three notebooks in an ELT pipeline. The notebooks need to be executed in a specific order for the pipeline to complete successfully. The data engineer would like to use a lakeflow declarative pipeline to manage this process. Which of the following steps must the data engineer take as part of implementing this pipeline using a lakeflow declarative pipeline?
 
 *Answer*
 
-### They need to create a Delta Live Tables pipeline from the Jobs page.
+### They need to create a lakeflow declarative pipeline from the Jobs page.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-A dataset has been defined using Delta Live Tables and includes an expectations clause:
+A dataset has been defined using a lakeflow declarative pipeline and includes an expectations clause:
 ```CONSTRAINT valid_timestamp EXPECT (timestamp > '2020-01-01')```
 What is the expected behavior when a batch of data containing data that violates these constraints is processed?
 
@@ -42,14 +42,14 @@ SELECT *
 FROM json.`/path/to/json/file.json`;
 ```
 
-The data engineer asks a colleague for help to convert this query for use in a Delta Live Tables (DLT) pipeline. The query should create the first table in the DLT pipeline.
+The data engineer asks a colleague for help to convert this query for use in a lakeflow declarative pipeline. The query should create the first table in the DLT pipeline.
 Which of the following describes the change the colleague needs to make to the query?
 
 *Answer*
 
 ### They need to add a CREATE LIVE TABLE table_name AS line at the beginning of the query.
 
-**Explanation:** To convert a standard SQL query into a Delta Live Tables (DLT) SQL pipeline, you must define a live table using the CREATE LIVE TABLE syntax. This tells DLT to treat the result of the query as a managed table in the pipeline.
+**Explanation:** To convert a standard SQL query into a lakeflow declarative SQL pipeline, you must define a live table using the CREATE LIVE TABLE syntax. This tells DLT to treat the result of the query as a managed table in the pipeline.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
@@ -644,9 +644,9 @@ A data engineer is responsible for maintaining a data pipeline that processes in
 
 *Answer*
 
-### Delta Live Tables
+### Lakeflow declarative pipelines
 
-**Explanation:** Delta Live Tables is a declarative framework designed specifically for building reliable, maintainable, and testable data processing pipelines. It includes built-in functionality for monitoring data quality, such as data quality checks, data lineage tracking, and alerting for failed checks. This makes it an ideal tool for automating the process of monitoring the data quality in a data pipeline.
+**Explanation:** a lakeflow declarative pipeline is a declarative framework designed specifically for building reliable, maintainable, and testable data processing pipelines. It includes built-in functionality for monitoring data quality, such as data quality checks, data lineage tracking, and alerting for failed checks. This makes it an ideal tool for automating the process of monitoring the data quality in a data pipeline.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
@@ -654,9 +654,9 @@ A data engineer is maintaining a data pipeline. Upon data ingestion, the data en
 
 *Answer*
 
-### Delta Live Tables
+### Lakeflow declarative pipelines
 
-**Explanation:** Delta Live Tables is a declarative framework for building reliable, maintainable, and testable data processing pipelines. You define the transformations to perform on your data and Delta Live Tables manages task orchestration, cluster management, monitoring, data quality, and error handling. Quality is explicitly mentioned in the definition.
+**Explanation:** a lakeflow declarative pipeline is a declarative framework for building reliable, maintainable, and testable data processing pipelines. You define the transformations to perform on your data and a lakeflow declarative pipeline manages task orchestration, cluster management, monitoring, data quality, and error handling. Quality is explicitly mentioned in the definition.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
@@ -931,13 +931,13 @@ Which of the following actions can the data engineer perform to ensure the Job c
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-A Delta Live Table (DLT) pipeline has been configured for a data engineering task. The pipeline includes two datasets defined using STREAMING LIVE TABLE, which allows real-time data ingestion, and three other datasets that are sourced from Delta Lake tables using LIVE TABLE. The pipeline is set to run in Development mode utilizing Continuous Pipeline Mode. Development mode means that Delta Live Tables will persistently update datasets at regular intervals, continuously processing incoming data until manually stopped or shut down. It's crucial to note that in this mode, the compute resources, such as the cluster used for processing, persist without automatic restarts or retries. This setup supports continuous data processing, further testing, or ongoing data processing tasks until explicitly terminated by the user. Assuming there is previously unprocessed data and all dataset definitions are correct, what would be the expected result after clicking the Start button to update the pipeline?
+A lakeflow declarative pipeline has been configured for a data engineering task. The pipeline includes two datasets defined using STREAMING LIVE TABLE, which allows real-time data ingestion, and three other datasets that are sourced from Delta Lake tables using LIVE TABLE. The pipeline is set to run in Development mode utilizing Continuous Pipeline Mode. Development mode means that lakeflow declarative pipeline will persistently update datasets at regular intervals, continuously processing incoming data until manually stopped or shut down. It's crucial to note that in this mode, the compute resources, such as the cluster used for processing, persist without automatic restarts or retries. This setup supports continuous data processing, further testing, or ongoing data processing tasks until explicitly terminated by the user. Assuming there is previously unprocessed data and all dataset definitions are correct, what would be the expected result after clicking the Start button to update the pipeline?
 
 *Answer*
 
 ### All datasets will be updated at set intervals until the pipeline is shut down. The compute resources will persist until the pipeline is shut down.
 
-**Explanation:** Correct answer because the pipeline will run continuously on a dedicated cluster until it is manually stopped, and the compute resources will be released only after the pipeline is shut down. The Continuous Pipeline Mode for Delta Live Tables allows the pipeline to run continuously and process data as it arrives. This mode is suitable for streaming ingest and CDC workloads that require low-latency updates. The Development mode for Delta Live Tables allows the pipeline to run on a dedicated cluster that is not shared with other pipelines. This mode is useful for testing and debugging the pipeline logic before deploying it to production. 
+**Explanation:** Correct answer because the pipeline will run continuously on a dedicated cluster until it is manually stopped, and the compute resources will be released only after the pipeline is shut down. The Continuous Pipeline Mode for a lakeflow declarative pipeline allows the pipeline to run continuously and process data as it arrives. This mode is suitable for streaming ingest and CDC workloads that require low-latency updates. The Development mode for a lakeflow declarative pipeline allows the pipeline to run on a dedicated cluster that is not shared with other pipelines. This mode is useful for testing and debugging the pipeline logic before deploying it to production. 
 
 Reference: [Databricks Documentation - Triggered vs. continuous pipeline mode](https://docs.databricks.com/aws/en/dlt/pipeline-mode)
 
@@ -946,8 +946,7 @@ Reference: [Databricks Documentation - Triggered vs. continuous pipeline mode](h
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-A Delta Live Table pipeline includes two datasets defined using STREAMING LIVE TABLE. Three datasets are defined against Delta Lake table sources using LIVE TABLE.
-The table is configured to run in Development mode using the Triggered Pipeline Mode.
+A lakeflow declarative pipeline includes two datasets defined using STREAMING LIVE TABLE. Three datasets are defined against Delta Lake table sources using LIVE TABLE. The table is configured to run in Development mode using the Triggered Pipeline Mode.
 
 Assuming previously unprocessed data exists and all definitions are valid, what is the expected outcome after clicking Start to update the pipeline?
 
@@ -955,7 +954,7 @@ Assuming previously unprocessed data exists and all definitions are valid, what 
 
 ### All datasets will be updated once and the pipeline will shut down. The compute resources will be terminated.
 
-**Explanation:** Triggered Pipeline Mode in Delta Live Tables is designed to run the pipeline once, processing all available data (including streaming sources), and then shut down.
+**Explanation:** Triggered Pipeline Mode in a lakeflow declarative pipeline is designed to run the pipeline once, processing all available data (including streaming sources), and then shut down.
 Development Mode allows for faster iteration and testing, but it does not change the behavior of Triggered Mode regarding execution frequency or resource persistence.
 
 STREAMING LIVE TABLE definitions will process available data once, not continuously, in Triggered Mode. After the run completes, compute resources are terminated automatically.
@@ -972,13 +971,13 @@ In the context of a Databricks Lakehouse environment, which of the following typ
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-Which of the following benefits does Delta Live Tables provide for ELT pipelines over standard data pipelines that utilize Spark and Delta Lake on Databricks?
+Which of the following benefits does lakeflow declarative pipeline provide for ELT pipelines over standard data pipelines that utilize Spark and Delta Lake on Databricks?
 
 *Answer*
 
 ### The ability to declare and maintain data table dependencies
 
-**Explanation:** Delta Live Tables (DLT) provides a declarative framework for building ELT pipelines in Databricks. One of its key advantages over standard Spark + Delta Lake pipelines is the ability to define table dependencies explicitly using Python or SQL. This allows Databricks to:
+**Explanation:** a lakeflow declarative pipeline provides a declarative framework for building ELT pipelines in Databricks. One of its key advantages over standard Spark + Delta Lake pipelines is the ability to define table dependencies explicitly using Python or SQL. This allows Databricks to:
 - Automatically track lineage
 - Optimize execution order
 - Handle incremental updates
@@ -987,7 +986,7 @@ Which of the following benefits does Delta Live Tables provide for ELT pipelines
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-When setting up a new Delta Live Tables pipeline in Databricks, which of the following components must be explicitly specified? 
+When setting up a new lakeflow declarative pipeline in Databricks, which of the following components must be explicitly specified? 
 
 (Note: Please refer to Databricks documentation for comprehensive details on mandatory and optional configurations.)
 
@@ -995,16 +994,15 @@ When setting up a new Delta Live Tables pipeline in Databricks, which of the fol
 
 ### At least one notebook library to be executed
 
-**Explanation:** According to Databricks documentation, specifying at least one notebook library to be executed is mandatory when creating a new Delta Live Tables pipeline. The storage location for output data is optional; if not specified, the system uses a default location.
+**Explanation:** According to Databricks documentation, specifying at least one notebook library to be executed is mandatory when creating a new lakeflow declarative pipeline. The storage location for output data is optional; if not specified, the system uses a default location.
 
-A notebook to be executed, it is the only mandatory requirement when creating a new Delta Live Tables pipeline. A pipeline is a data processing workflow that contains materialized views and streaming tables declared in Python or SQL source files. Delta Live Tables infers the dependencies between these tables and ensures updates occur in the correct order. To create a pipeline, you need to specify at least one notebook library to be executed, which contains the Delta Live Tables syntax. You can also specify multiple libraries of different languages within your pipeline. 
+A notebook to be executed, it is the only mandatory requirement when creating a new lakeflow declarative pipeline. A pipeline is a data processing workflow that contains materialized views and streaming tables declared in Python or SQL source files. A lakeflow declarative pipeline infers the dependencies between these tables and ensures updates occur in the correct order. To create a pipeline, you need to specify at least one notebook library to be executed, which contains the lakeflow declarative pipeline syntax. You can also specify multiple libraries of different languages within your pipeline. 
 
 The other options are optional or not applicable for creating a pipeline: 
 - you can optionally provide a key-value pair configuration to customize the pipeline settings, such as the storage location, the target schema, the notifications, and the pipeline mode.
 - the DBU/hour cost is determined by the cluster configuration, not the pipeline creation. 
 - you can optionally specify a storage location for the output data from the pipeline. If you leave it empty, the system uses a default location. 
 - you can optionally specify a location of a target database for the written data, either in the Hive metastore or the Unity Catalog.
-References: Tutorial: Run your first Delta Live Tables pipeline, What is Delta Live Tables?, Create a pipeline, Pipeline configuration.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
@@ -1021,13 +1019,13 @@ What is the purpose of using the STREAM function in this query?
 
 **Explanation:** The STREAM function is used to refer to a streaming live table. This means that the 'customers' table is a streaming live table, specifically designed for processing streaming data. The STREAM function enables the query to process data as it arrives, making it suitable for use in a streaming live table context.
 
-The STREAM() function is used in Delta Live Tables (DLT) to read from a streaming source. In this case, LIVE.customers is a streaming live table, meaning it ingests data continuously. To process this data correctly in a streaming context, you must wrap it in STREAM() to indicate that the query should be treated as a Structured Streaming operation.
+The STREAM() function is used in lakeflow declarative pipelines to read from a streaming source. In this case, LIVE.customers is a streaming live table, meaning it ingests data continuously. To process this data correctly in a streaming context, you must wrap it in STREAM() to indicate that the query should be treated as a Structured Streaming operation.
 
 LIVE.customers is a streaming source, meaning it's defined as a STREAMING LIVE TABLE elsewhere in the pipeline. It ingests data continuously.
 
 loyal_customers is also defined as a STREAMING LIVE TABLE, which means it will continuously process incoming data from LIVE.customers.
 
-The STREAM() function is required to read from a streaming source in Delta Live Tables SQL syntax.
+The STREAM() function is required to read from a streaming source in lakeflow declarative pipelines SQL syntax.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
@@ -1402,7 +1400,7 @@ Which of the following commands should be executed to grant full permissions on 
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-In setting up a Delta Live Table (DLT) pipeline for a data engineering task, you have utilized STREAMING LIVE TABLE to define two datasets that will process real-time data streams and LIVE TABLE to define three datasets sourced from Delta Lake tables. The pipeline is configured to execute in Production mode using the **Continuous Pipeline Mode**. 
+In setting up a lakeflow declarative pipeline for a data engineering task, you have utilized STREAMING LIVE TABLE to define two datasets that will process real-time data streams and LIVE TABLE to define three datasets sourced from Delta Lake tables. The pipeline is configured to execute in Production mode using the **Continuous Pipeline Mode**. 
 
 Given that there is previously unprocessed data available and all table definitions are correct, what would be the expected result upon initiating the pipeline update by clicking Start?
 
@@ -1414,11 +1412,9 @@ Given that there is previously unprocessed data available and all table definiti
 
 In Continuous Pipeline Mode, the pipeline continuously processes incoming data updates at set intervals in Production mode. This ensures that the datasets are kept up-to-date as new data arrives. The compute resources are allocated dynamically to process and update the datasets as needed and will be terminated when the pipeline is stopped. This mode allows for ongoing updates to the datasets from the STREAMING LIVE TABLE and LIVE TABLE sources, ensuring that the data remains current and reflects the changes from the data sources.
 
-In Delta Live Tables (DLT), when configured to run in Continuous Pipeline Mode, particularly in a production environment, the system is designed to continuously process and update data as it becomes available. This mode keeps the compute resources active to handle ongoing data processing and automatically updates all datasets defined in the pipeline at predefined intervals. Once the pipeline is manually stopped, the compute resources are terminated to conserve resources and reduce costs. This mode is suitable for production environments where datasets need to be kept up-to-date with the latest data.
+In lakeflow declarative pipelines, when configured to run in Continuous Pipeline Mode, particularly in a production environment, the system is designed to continuously process and update data as it becomes available. This mode keeps the compute resources active to handle ongoing data processing and automatically updates all datasets defined in the pipeline at predefined intervals. Once the pipeline is manually stopped, the compute resources are terminated to conserve resources and reduce costs. This mode is suitable for production environments where datasets need to be kept up-to-date with the latest data.
 
-Reference: [Delta Live Tables Guide](https://www.databricks.com/discover/pages/getting-started-with-delta-live-tables)
-
-Reference: [Configure pipeline settings for Delta Live Tables, Tutorial: Run your first Delta Live Tables pipeline, Building Reliable Data Pipelines Using DataBricks' Delta Live Tables](https://docs.azure.cn/en-us/databricks/delta-live-tables/tutorials)
+Reference: (https://www.databricks.com/blog/processing-millions-events-thousands-aircraft-one-declarative-pipeline?utm_source=linkedin&utm_medium=organic-social)
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
@@ -1537,7 +1533,7 @@ If the data engineer only wants the query to execute a micro-batch to process da
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-A dataset, constructed using Delta Live Tables, incorporates an expectations clause: 
+A dataset, constructed using lakeflow declarative pipelines, incorporates an expectations clause: 
 
 `CONSTRAINT valid_timestamp EXPECT (timestamp > '2020-01-01') ON VIOLATION DROP ROW;`
 
@@ -1571,13 +1567,13 @@ Why the other options are incorrect:
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-In the context of creating Delta Live Tables (DLT) using SQL within Databricks, which of the following scenarios is most appropriate for employing the CREATE STREAMING LIVE TABLE (formerly known as CREATE INCREMENTAL LIVE TABLE) syntax instead of the CREATE LIVE TABLE syntax?
+In the context of creating lakeflow declarative pipelines using SQL within Databricks, which of the following scenarios is most appropriate for employing the CREATE STREAMING LIVE TABLE (formerly known as CREATE INCREMENTAL LIVE TABLE) syntax instead of the CREATE LIVE TABLE syntax?
 
 *Answer*
 
 ### CREATE STREAMING LIVE TABLE should be used when data needs to be processed incrementally
 
-**Explanation:** The CREATE STREAMING LIVE TABLE syntax is used to create tables that read data incrementally, while the CREATE LIVE TABLE syntax is used to create tables that read data in batch mode. Delta Live Tables (DLT) support both streaming and batch modes of processing data. When the data is streamed and needs to be processed incrementally, CREATE STREAMING LIVE TABLE should be used.
+**Explanation:** The CREATE STREAMING LIVE TABLE syntax is used to create tables that read data incrementally, while the CREATE LIVE TABLE syntax is used to create tables that read data in batch mode. Lakeflow declarative pipelines support both streaming and batch modes of processing data. When the data is streamed and needs to be processed incrementally, CREATE STREAMING LIVE TABLE should be used.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
@@ -1605,7 +1601,7 @@ Reference: https://docs.databricks.com/en/ingestion/auto-loader/index.html
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-A data engineer is working with a Delta Live Tables (DLT) pipeline that comprises three tables. The pipeline is configured to drop invalid records at each stage to maintain data quality. However, the engineer has observed that certain data records are being dropped at some point in the DLT pipeline due to quality issues. 
+A data engineer is working with a lakeflow declarative pipeline that comprises three tables. The pipeline is configured to drop invalid records at each stage to maintain data quality. However, the engineer has observed that certain data records are being dropped at some point in the DLT pipeline due to quality issues. 
 
 To locate the specific table where the data is being dropped, which of the following strategies can the data engineer employ to diagnose and identify the table responsible for dropping the records?
 
@@ -1613,7 +1609,7 @@ To locate the specific table where the data is being dropped, which of the follo
 
 ### They can navigate to the DLT pipeline page, click on each table, and views the data quality statistics.
 
-**Explanation:** To identify the table in a Delta Live Tables (DLT) pipeline where data is being dropped due to quality concerns, the data engineer can navigate to the DLT pipeline page, click on each table in the pipeline, and view the data quality statistics. These statistics often include information about records dropped, violations of expectations, and other data quality metrics. By examining the data quality statistics for each table in the pipeline, the data engineer can determine at which table the data is being dropped.
+**Explanation:** To identify the table in a lakeflow declarative pipeline where data is being dropped due to quality concerns, the data engineer can navigate to the DLT pipeline page, click on each table in the pipeline, and view the data quality statistics. These statistics often include information about records dropped, violations of expectations, and other data quality metrics. By examining the data quality statistics for each table in the pipeline, the data engineer can determine at which table the data is being dropped.
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
@@ -1956,7 +1952,7 @@ I think the key is the word sequential. If the queries are sequential, they won'
 
 -------------------------------------------------------------------------------------------------------------------------
 ## **Question**
-Which of the following describes when to use the CREATE STREAMING LIVE TABLE (formerly CREATE INCREMENTAL LIVE TABLE) syntax over the CREATE LIVE TABLE syntax when creating Delta Live Tables (DLT) tables using SQL?
+Which of the following describes when to use the CREATE STREAMING LIVE TABLE (formerly CREATE INCREMENTAL LIVE TABLE) syntax over the CREATE LIVE TABLE syntax when creating a lakeflow declarative pipeline tables using SQL?
 
 *Answer*
 
